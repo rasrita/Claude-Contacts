@@ -113,13 +113,13 @@ async function parseVCF(vcfContent) {
     const orgRegex = /(?:CATEGORIES[^;\n]*;)*?(.*?)NAME(.*?)(?=[;,]|$)|[Oo][Rr][Gg]:(.+)$/i;
 
     function addContact() {
-        console.debug('addContact', currentContact);
+        //console.debug('addContact', currentContact);
         if (!currentContact) return null;
 
         currentContact.familialName = cleanValue(currentContact.familialName);
         currentContact.givenName = cleanValue(currentContact.givenName);
-        currentContact.emails = cleanValue(currentContact.emails[0]);//extractValues(currentContact.emails);
-        currentContact.telephone = cleanValue(currentContact.telephone[0]);//extractSingleValue(currentContact.telephone, { type: 'work' }));
+        currentContact.email = cleanValue(currentContact.emails[0]);//extractValues(currentContact.emails);
+        currentContact.telephone = cleanValue(currentContact.telephones[0]);//extractSingleValue(currentContact.telephone, { type: 'work' }));
         currentContact.organisation = cleanValue(extractSingleValue(currentContact.org, { type: 'work' }));
         currentContact.tags = cleanValue(currentContact.tags);
         currentContact.note = cleanValue(currentContact.note);
@@ -137,7 +137,7 @@ async function parseVCF(vcfContent) {
             givenName: currentContact.givenName || '',
             fullName: fullNameParts.join(' ') || '',
             email: currentContact.emails[0] || null,
-            telephone: currentContact.telephone || null,
+            telephone: currentContact.telephones[0] || null,
             organisation: currentContact.organisation || null,
             tags: currentContact.tags || '',
             note: currentContact.note || ''
@@ -150,14 +150,14 @@ async function parseVCF(vcfContent) {
         line = line.trim();
         if (!line) continue;
 
-        console.debug('Analyse ligne : ', line);
+        //console.debug('Analyse ligne : ', line);
 
         const upperLine = line.toUpperCase();
 
         // 1. GESTION DES BALISES DE STRUCTURE (On ne fait pas de 'continue' avant ça !)
         if (upperLine.startsWith('BEGIN:VCARD')) {
             console.debug('Début de contact trouvé');
-            currentContact = { emails: [], telephone: [], org: '', note: '', familialName: '', givenName: '' };
+            currentContact = { emails: [], telephones: [], email: '', telephone:'', org: '', note: '', familialName: '', givenName: '' };
             inContactBlock = true;
             continue; 
         } 
@@ -198,19 +198,19 @@ async function parseVCF(vcfContent) {
             } 
             else if (upperLine.includes('TEL;')) {
 //                console.debug('Find Tel ',line);
-                let telValue = extractSingleMatch(telRegex, { type: 'work' }) || line.split(/TEL.*:/i)[1];
+                let telValue = extractSingleMatch(telRegex, { type: 'CELL' }) || line.split(/TEL.*:/i)[1];
                 if (telValue) {
                     const bracketsMatch = telValue.match(/[\[()][-+0-9\s]+/);
-                    currentContact.telephone.push(bracketsMatch ? bracketsMatch[0] : telValue.trim());
+                    currentContact.telephones.push(bracketsMatch ? bracketsMatch[0] : telValue.trim());
                 }
             } 
             else if (upperLine.includes('ADR;')) {
-                console.debug('ADR ',line);
+//                console.debug('ADR ',line);
                 const orgMatch = line.match(/ADR;(.*)/i);
                 currentContact.org = orgMatch ? orgMatch[1].split(';')[0] : '';
             } 
             else if (upperLine.includes('CATEGORIES:')) {
-                console.debug('CATEGORIES ',line);
+//                console.debug('CATEGORIES ',line);
                 currentContact.note = line.split(/CATEGORIES:/i)[1].trim();
             }
         }
@@ -224,22 +224,27 @@ async function parseVCF(vcfContent) {
     async function importContactsVCF()
     {
         console.debug('importContactsVCF', currentContact);
-        let prenom, nom, email, telephone, organisation, tags = "";
+        let prenom, nom, emails, email, telephone, organisation, tags = "";
         nom = currentContact.familialName;
         prenom = currentContact.givenName;
-        email = currentContact.emails;
+        emails = currentContact.emails;
+        email = currentContact.email;
         telephone = currentContact.telephone;
+        telephones = currentContact.telephones;
+        tags = currentContact.tags;
+        organisation = currentContact.organisation;
         // Création via API
         try {
             //console.debug (nom, prenom, email, telephone, organisation, tags);
             const response = await fetch('/api/contacts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nom, prenom, email, telephone, organisation, tags })
+                body: JSON.stringify({ nom, prenom, email, emails, telephone, telephones, organisation, tags })
             });
 
             if (response.ok) {
                 count++;
+                console.debug('importContactsVCF ', nom, prenom, emails, telephone, telephones, organisation, tags );
             } else {
                 console.error('Erreur création contact:', await response.text());
             }
@@ -499,6 +504,7 @@ function toggleElement(element, show) {
  * Charger tous les contacts depuis l'API
  */
 async function loadContacts() {
+    console.debug('loadContacts()');
     try {
         const response = await fetch(`${API_BASE}/contacts`);
         const result = await response.json();

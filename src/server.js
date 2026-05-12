@@ -132,9 +132,11 @@ app.listen(PORT, () => {
     console.log('    - PUT    /api/config/:key   -> Mettre à jour la config');
     console.log('\n  Paramètres d\'environnement disponibles :');
     console.log('    - PORT        : Port d\'écoute (défaut : ' + PORT + ')');
-    */
+    
     console.log('Ras Rita @ 2026');
+    
     console.log('='.repeat(60) + '\n');
+    */
 });
 
 module.exports = app;

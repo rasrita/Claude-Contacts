@@ -4,23 +4,30 @@
 const { db } = require('../db/database');
 
 /**
- * Obtenir tous les contacts avec leurs catégories
+ * Obtenir tous les contacts avec leurs catégories et emails
  */
 exports.getAllContacts = (req, res) => {
     try {
         // Récupérer tous les contacts
-        const contacts = db.prepare('SELECT * FROM contacts ORDER BY prenom ASC, nom ASC').all();
+        const contacts = db.prepare('SELECT id, prenom, nom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, conjoint, enfants, tags, notes, created_at, updated_at FROM contacts ORDER BY prenom ASC, nom ASC').all();
 
-        // Ajouter les catégories pour chaque contact
-        const contactsWithCategories = contacts.map(contact => {
+        // Ajouter les catégories et emails pour chaque contact
+        const contactsWithDetails = contacts.map(contact => {
+            // Récupérer les catégories
             const categories = db.prepare(
-                'SELECT c.nom, c.couleur FROM contact_categories cc ' +
+                'SELECT c.nom as nom, c.couleur FROM contact_categories cc ' +
                 'JOIN categories c ON cc.category_id = c.id WHERE cc.contact_id = ?'
             ).all(contact.id);
-            return { ...contact, categories: categories };
+
+            // Récupérer les emails
+            const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+            // Récupérer les téléphones
+            const telephones = db.prepare('SELECT telephone, type FROM contact_telephones WHERE contact_id = ? ORDER BY type, telephone').all(contact.id);
+
+            return { ...contact, categories: categories || [], emails: emails || [], telephones: telephones|| [] };
         });
 
-        res.json({ success: true, data: contactsWithCategories });
+        res.json({ success: true, data: contactsWithDetails });
     } catch (error) {
         console.error('Erreur getAllContacts:', error);
         res.status(500).json({
@@ -31,12 +38,12 @@ exports.getAllContacts = (req, res) => {
 };
 
 /**
- * Obtenir un contact par ID
+ * Obtenir un contact par ID avec ses catégories et emails
  */
 exports.getContactById = (req, res) => {
     try {
         const { id } = req.params;
-        const contact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(id);
+        const contact = db.prepare('SELECT id, prenom, nom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, conjoint, enfants, tags, notes, created_at, updated_at FROM contacts WHERE id = ?').get(id);
 
         if (!contact) {
             return res.status(404).json({ success: false, message: 'Contact non trouvé' });
@@ -44,11 +51,14 @@ exports.getContactById = (req, res) => {
 
         // Récupérer les catégories
         const categories = db.prepare(
-            'SELECT c.nom, c.couleur FROM contact_categories cc ' +
+            'SELECT c.nom as nom, c.couleur FROM contact_categories cc ' +
             'JOIN categories c ON cc.category_id = c.id WHERE cc.contact_id = ?'
         ).all(id);
 
-        res.json({ success: true, data: { ...contact, categories } });
+        // Récupérer les emails
+        const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(id);
+
+        res.json({ success: true, data: { ...contact, categories: categories || [], emails: emails || [] } });
     } catch (error) {
         console.error('Erreur getContactById:', error);
         res.status(500).json({
@@ -59,28 +69,81 @@ exports.getContactById = (req, res) => {
 };
 
 /**
- * Créer un nouveau contact
+ * Créer un nouveau contact avec support pour multiples emails
  */
 exports.createContact = (req, res) => {
     try {
-        const { nom, prenom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, email, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, jour_anniversaire, conjoint, enfants, tags, notes, categories } = req.body;
+        console.debug('createContact');
+        const { nom, prenom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, email, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, jour_anniversaire, conjoint, enfants, tags, notes, categories, emails, telephones } = req.body;
 
-        // Insertion du contact
+        // Insertion du contact (sans email car maintenant dans une table séparée)
         const insert = db.prepare(`
             INSERT INTO contacts (nom, prenom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, email, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, tags, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
+        
+        console.debug('createContact',nom, prenom, email, telephone, organisation);
 
-        insert.run(
+        const newRow = insert.run(
             nom || '', prenom || '', titre || null,
-            prenom_honneur_prefix || null, prenom_honneur_suffix || null, surnom || null,
-            email || null, telephone || null, organisation || null, adresse || null,
-            code_postal || null, pays || null, ville || null, region || null,
+            prenom_honneur_prefix || null, prenom_honneur_suffix || null, surnom || null, email || null,
+            telephone || null, organisation || null, adresse || null, code_postal || null,
+            pays || null, ville || null, region || null,
             anniversaire ? new Date(anniversaire).toISOString().split('T')[0] : null,
             tags || '', notes || ''
         );
 
-        const newContact = db.prepare('SELECT last_insert_rowid() as id').get();
+        const contactId = newRow.lastInsertRowid;
+
+        // Ajouter les emails si fournis (support multiples)
+        if (emails && Array.isArray(emails)) {
+            //emails.forEach(emailData => {
+            for ( emailData of emails) {
+                emailStr = emailData || email || '';
+                console.debug('emailStr', emailStr);
+                if (!emailStr.trim()) return;
+
+                try {
+                    console.debug('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) VALUES (?, ?, ?)', contactId, emailStr.trim(), emailData.type || 'work');
+                    db.prepare('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) VALUES (?, ?, ?)')
+                        .run(contactId, emailStr.trim(), emailData.type || 'work');
+
+                } catch (err) {
+                    if (err.message.includes('UNIQUE')) {
+                        // Email déjà existant pour ce contact, ignorer
+                        console.error('// Email déjà existant pour ce contact, ignorer:', err.message);
+                    } else {
+                        console.error('Erreur ajout email:', err.message);
+                    }
+                }
+            };
+            console.debug('// Ajouter les emails si fournis (support multiples)', emails);
+        }
+
+        // Ajouter les telephones si fournis (support multiples)
+        if (telephones && Array.isArray(telephones)) {
+            //emails.forEach(emailData => {
+            for ( telephoneData of telephones) {
+                telephoneStr = telephoneData || email || '';
+                console.debug('telephoneStr', telephoneStr);
+                if (!telephoneStr.trim()) return;
+
+                try {
+                    console.debug('INSERT OR IGNORE INTO contact_telephones (contact_id, telephone, type) VALUES (?, ?, ?)', contactId, telephoneStr.trim(), telephoneData.type || 'work');
+                    db.prepare('INSERT OR IGNORE INTO contact_telephones (contact_id, telephone, type) VALUES (?, ?, ?)')
+                        .run(contactId, telephoneStr.trim(), telephoneData.type || 'work');
+
+                } catch (err) {
+                    if (err.message.includes('UNIQUE')) {
+                        // telephones déjà existant pour ce contact, ignorer
+                        console.error('// telephones déjà existant pour ce contact, ignorer:', err.message);
+                    } else {
+                        console.error('Erreur ajout telephones:', err.message);
+                    }
+                }
+            };
+            console.debug('// Ajouter les telephones si fournis (support multiples)', telephones);
+        }
 
         // Ajouter les catégories si fournies
         if (categories && Array.isArray(categories)) {
@@ -102,14 +165,14 @@ exports.createContact = (req, res) => {
                 }
 
                 db.prepare('INSERT INTO contact_categories (contact_id, category_id) VALUES (?, ?)')
-                    .run(newContact.id, category_id);
+                    .run(contactId, category_id);
             });
         }
 
-        // Récupérer le contact complet avec ses catégories
-        const contactWithCategories = getContactWithCategories(newContact.id);
+        // Récupérer le contact complet avec ses catégories et emails
+        const contactWithDetails = getContactWithCategoriesAndEmails(contactId);
 
-        res.status(201).json({ success: true, data: contactWithCategories });
+        res.status(201).json({ success: true, data: contactWithDetails });
     } catch (error) {
         console.error('Erreur createContact:', error);
         res.status(500).json({
@@ -143,7 +206,6 @@ exports.updateContact = (req, res) => {
         if (updatedData.prenom_honneur_prefix !== undefined) { updateFields.push('prenom_honneur_prefix = ?'); values.push(updatedData.prenom_honneur_prefix || null); }
         if (updatedData.prenom_honneur_suffix !== undefined) { updateFields.push('prenom_honneur_suffix = ?'); values.push(updatedData.prenom_honneur_suffix || null); }
         if (updatedData.surnom !== undefined) { updateFields.push('surnom = ?'); values.push(updatedData.surnom || null); }
-        if (updatedData.email !== undefined) { updateFields.push('email = ?'); values.push(updatedData.email || null); }
         if (updatedData.telephone !== undefined) { updateFields.push('telephone = ?'); values.push(updatedData.telephone || null); }
         if (updatedData.organisation !== undefined) { updateFields.push('organisation = ?'); values.push(updatedData.organisation || null); }
         if (updatedData.adresse !== undefined) { updateFields.push('adresse = ?'); values.push(updatedData.adresse || null); }
@@ -164,6 +226,37 @@ exports.updateContact = (req, res) => {
 
         const updateStmt = db.prepare(`UPDATE contacts SET ${updateFields.join(', ')} WHERE id = ?`);
         updateStmt.run(...values);
+
+        // Gestion des emails (support multiples)
+        let oldEmails;
+        try {
+            oldEmails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(id);
+        } catch (e) {}
+
+        if (updatedData.emails !== undefined && Array.isArray(updatedData.emails)) {
+            // Supprimer les anciens emails
+            if (oldEmails) {
+                const deleteEmails = db.prepare('DELETE FROM contact_emails WHERE contact_id = ?');
+                deleteEmails.run(id);
+            }
+
+            // Ajouter les nouveaux emails
+            updatedData.emails.forEach(emailData => {
+                const emailStr = emailData.email || '';
+                if (!emailStr.trim()) return;
+
+                try {
+                    db.prepare('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) VALUES (?, ?, ?)')
+                        .run(id, emailStr.trim(), emailData.type || 'work');
+                } catch (err) {
+                    if (err.message.includes('UNIQUE')) {
+                        // Email déjà existant pour ce contact, ignorer
+                    } else {
+                        console.error('Erreur ajout email:', err.message);
+                    }
+                }
+            });
+        }
 
         // Gestion des catégories (suppression et réajout)
         if (updatedData.categories !== undefined) {
@@ -193,8 +286,8 @@ exports.updateContact = (req, res) => {
             }
         }
 
-        // Récupérer le contact mis à jour
-        const updatedContact = getContactWithCategories(id);
+        // Récupérer le contact mis à jour avec catégories et emails
+        const updatedContact = getContactWithCategoriesAndEmails(id);
 
         res.json({ success: true, data: updatedContact });
     } catch (error) {
@@ -219,7 +312,7 @@ exports.deleteContact = (req, res) => {
             return res.status(404).json({ success: false, message: 'Contact non trouvé' });
         }
 
-        // Supprimer le contact (les catégories sont supprimées automatiquement via CASCADE)
+        // Supprimer le contact (catégories et emails supprimés via CASCADE)
         db.prepare('DELETE FROM contacts WHERE id = ?').run(id);
 
         res.json({ success: true, message: 'Contact supprimé avec succès' });
@@ -233,19 +326,21 @@ exports.deleteContact = (req, res) => {
 };
 
 /**
- * Obtenir un contact avec ses catégories
+ * Obtenir un contact avec ses catégories et emails
  */
-function getContactWithCategories(contactId) {
-    const contact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(contactId);
+function getContactWithCategoriesAndEmails(contactId) {
+    const contact = db.prepare('SELECT id, prenom, nom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, conjoint, enfants, tags, notes, created_at, updated_at FROM contacts WHERE id = ?').get(contactId);
 
     if (!contact) return null;
 
     const categories = db.prepare(
-        'SELECT c.nom, c.couleur FROM contact_categories cc ' +
+        'SELECT c.nom as nom, c.couleur FROM contact_categories cc ' +
         'JOIN categories c ON cc.category_id = c.id WHERE cc.contact_id = ?'
     ).all(contactId);
 
-    return { ...contact, categories };
+    const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contactId);
+
+    return { ...contact, categories: categories || [], emails: emails || [] };
 }
 
 /**
@@ -309,11 +404,20 @@ exports.mergeContacts = (req, res) => {
             'SELECT ?, cc.category_id FROM contact_categories cc WHERE cc.contact_id = ?')
             .run(newContactId, id2);
 
+        // Fusionner les emails depuis les deux contacts
+        db.prepare('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) ' +
+            'SELECT ?, email, type FROM contact_emails WHERE contact_id = ?')
+            .run(newContactId, id1);
+
+        db.prepare('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) ' +
+            'SELECT ?, email, type FROM contact_emails WHERE contact_id = ?')
+            .run(newContactId, id2);
+
         // Supprimer le premier contact
         db.prepare('DELETE FROM contacts WHERE id = ?').run(id1);
 
-        // Récupérer le nouveau contact fusionné
-        const mergedContact = getContactWithCategories(newContactId);
+        // Récupérer le nouveau contact fusionné avec catégories et emails
+        const mergedContact = getContactWithCategoriesAndEmails(newContactId);
 
         res.json({ success: true, data: {
             message: `Contacts ${id1} et ${id2} fusionnés`,
@@ -344,13 +448,19 @@ exports.searchContacts = (req, res) => {
         const searchTerm = `%${q}%`;
 
         const results = db.prepare(`
-            SELECT id, nom, prenom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, email, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, tags, notes, created_at, updated_at
+            SELECT id, nom, prenom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, tags, notes, created_at, updated_at
             FROM contacts
-            WHERE LOWER(nom) LIKE ? OR LOWER(prenom) LIKE ? OR LOWER(email) LIKE ? OR LOWER(telephone) LIKE ?
+            WHERE LOWER(nom) LIKE ? OR LOWER(prenom) LIKE ? OR LOWER(telephone) LIKE ?
                OR LOWER(titre) LIKE ? OR LOWER(surnom) LIKE ? OR LOWER(organisation) LIKE ?
                OR LOWER(adresse) LIKE ? OR LOWER(pays) LIKE ? OR LOWER(ville) LIKE ?
             ORDER BY prenom ASC, nom ASC
-        `).all(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+        `).all(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+
+        // Récupérer les emails pour chaque résultat (optimisation : batch fetch)
+        const contactsWithEmails = results.map(contact => {
+            const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+            return { ...contact, emails: emails || [] };
+        });
 
         res.json({ success: true, data: results });
     } catch (error) {
@@ -373,10 +483,34 @@ exports.filterByEmail = (req, res) => {
             return res.json({ success: true, data: [] });
         }
 
-        const results = db.prepare('SELECT * FROM contacts WHERE LOWER(email) LIKE ? ORDER BY prenom ASC')
-            .all('%' + email.toLowerCase() + '%');
+        // Rechercher les emails dans la table contact_emails et obtenir les contacts correspondants
+        const subQuery = db.prepare(`SELECT DISTINCT ce.contact_id FROM contact_emails ce
+            WHERE LOWER(ce.email) LIKE ?`);
 
-        res.json({ success: true, data: results });
+        const contactIds = subQuery.all('%' + email.toLowerCase() + '%');
+
+        if (contactIds.length === 0) {
+            return res.json({ success: true, data: [] });
+        }
+
+        // Récupérer les contacts uniques avec leurs IDs triés pour éviter les doublons
+        const contactIdList = contactIds.map(c => c.contact_id).join(',');
+        const uniqueContacts = db.prepare(`
+            SELECT DISTINCT id, nom, prenom, titre, prenom_honneur_prefix,
+                   prenom_honneur_suffix, surnom, telephone, organisation,
+                   adresse, code_postal, pays, ville, region, anniversaire, tags, notes
+            FROM contacts
+            WHERE id IN (${contactIdList})
+            ORDER BY prenom ASC, nom ASC
+        `).all();
+
+        // Ajouter les emails pour chaque contact
+        const filteredContacts = uniqueContacts.map(contact => {
+            const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ?').all(contact.id);
+            return { ...contact, emails: emails || [] };
+        });
+
+        res.json({ success: true, data: filteredContacts });
     } catch (error) {
         console.error('Erreur filterByEmail:', error);
         res.status(500).json({
@@ -397,10 +531,18 @@ exports.filterByPhone = (req, res) => {
             return res.json({ success: true, data: [] });
         }
 
-        const results = db.prepare('SELECT * FROM contacts WHERE LOWER(telephone) LIKE ? ORDER BY prenom ASC')
-            .all('%' + phone.toLowerCase() + '%');
+        // Récupérer les contacts avec leurs emails
+        const results = db.prepare(`SELECT DISTINCT id, nom, prenom, titre, prenom_honneur_prefix,
+            prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, tags, notes
+            FROM contacts WHERE LOWER(telephone) LIKE ?`).all('%' + phone.toLowerCase() + '%');
 
-        res.json({ success: true, data: results });
+        // Ajouter les emails pour chaque contact
+        const filteredContacts = results.map(contact => {
+            const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+            return { ...contact, emails: emails || [] };
+        });
+
+        res.json({ success: true, data: filteredContacts });
     } catch (error) {
         console.error('Erreur filterByPhone:', error);
         res.status(500).json({
@@ -421,10 +563,18 @@ exports.filterByOrganisation = (req, res) => {
             return res.json({ success: true, data: [] });
         }
 
-        const results = db.prepare('SELECT * FROM contacts WHERE LOWER(organisation) LIKE ? ORDER BY prenom ASC')
-            .all('%' + org.toLowerCase() + '%');
+        // Récupérer les contacts avec leurs emails
+        const results = db.prepare(`SELECT DISTINCT id, nom, prenom, titre, prenom_honneur_prefix,
+            prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, tags, notes
+            FROM contacts WHERE LOWER(organisation) LIKE ?`).all('%' + org.toLowerCase() + '%');
 
-        res.json({ success: true, data: results });
+        // Ajouter les emails pour chaque contact
+        const filteredContacts = results.map(contact => {
+            const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+            return { ...contact, emails: emails || [] };
+        });
+
+        res.json({ success: true, data: filteredContacts });
     } catch (error) {
         console.error('Erreur filterByOrganisation:', error);
         res.status(500).json({

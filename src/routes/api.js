@@ -130,7 +130,6 @@ router.post('/import/csv', upload.single('file'), (req, res) => {
                 const contactData = {
                     nom: values[0]?.trim() || '',
                     prenom: values[1]?.trim() || '',
-                    email: values[2] ? values[2].trim().replace(/"/g, '') : null,
                     telephone: values[3]?.trim() || null,
                     organisation: values[4]?.trim() || null,
                     tags: values[5]?.trim() || '',
@@ -141,19 +140,38 @@ router.post('/import/csv', upload.single('file'), (req, res) => {
                 const { db } = require('../db/database');
 
                 const insert = db.prepare(`
-                    INSERT INTO contacts (nom, prenom, email, telephone, organisation, tags, notes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO contacts (nom, prenom, telephone, organisation, tags, notes)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 `);
 
                 const newRow = insert.run(
                     contactData.nom.trim(),
                     contactData.prenom.trim(),
-                    contactData.email || null,
                     contactData.telephone || null,
                     contactData.organisation || null,
                     contactData.tags || '',
                     contactData.notes || ''
                 );
+
+                // Ajouter les emails (support multiple emails)
+                if (values[2]) {
+                    const emailLines = values[2].split(';').filter(e => e.trim());
+                    emailLines.forEach(emailStr => {
+                        const email = emailStr.trim().replace(/"/g, '');
+                        if (email && !email.includes('@')) return; // Ignorer les valeurs invalides
+
+                        try {
+                            db.prepare('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) VALUES (?, ?, ?)')
+                                .run(newRow.lastInsertRowid, email, 'work');
+                        } catch (err) {
+                            if (err.message.includes('UNIQUE')) {
+                                // Email déjà existant, ignorer
+                            } else {
+                                console.error('Erreur ajout email import CSV:', err.message);
+                            }
+                        }
+                    });
+                }
 
                 // Ajouter les catégories si fournies dans le fichier CSV
                 if (values.length > 6) {
@@ -218,8 +236,8 @@ router.post('/import/vcf', upload.single('file'), (req, res) => {
 
         parsedVcards.forEach(vcard => {
             const insert = db.prepare(`
-                INSERT INTO contacts (nom, prenom, email, telephone, organisation, tags, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO contacts (nom, prenom, telephone, organisation, tags, notes)
+                VALUES (?, ?, ?, ?, ?, ?)
             `);
 
             // Construire les notes avec tous les champs vCard standards disponibles
@@ -243,16 +261,34 @@ router.post('/import/vcf', upload.single('file'), (req, res) => {
             const newRow = insert.run(
                 vcard.family_name || '',
                 vcard.given_name || '',
-                vcard.emails?.[0]?.address || null,
                 vcard.telephones?.[0]?.number || null,
                 vcard.organisation || vcard.company || null,
                 (vcard.notes || '') + (vcard.tags ? ';' + vcard.tags : ''),
                 fullNotes
             );
 
+            // Ajouter les emails (support multiple emails VCF)
+            if (vcard.emails && Array.isArray(vcard.emails)) {
+                vcard.emails.forEach(email => {
+                    const emailAddress = email.address || '';
+                    if (!emailAddress) return;
+
+                    try {
+                        db.prepare('INSERT OR IGNORE INTO contact_emails (contact_id, email, type) VALUES (?, ?, ?)')
+                            .run(newRow.lastInsertRowid, emailAddress, email.type || 'work');
+                    } catch (err) {
+                        if (err.message.includes('UNIQUE')) {
+                            // Email déjà existant, ignorer
+                        } else {
+                            console.error('Erreur ajout email import VCF:', err.message);
+                        }
+                    }
+                });
+            }
+
             // Ajouter les catégories si présentes
-            if (contact.categories && Array.isArray(contact.categories)) {
-                contact.categories.forEach(catName => {
+            if (vcard.categories && Array.isArray(vcard.categories)) {
+                vcard.categories.forEach(catName => {
                     let category_id;
                     const existingCategory = db.prepare(
                         'SELECT id FROM categories WHERE nom = ?'
@@ -292,27 +328,44 @@ router.post('/import/vcf', upload.single('file'), (req, res) => {
 router.post('/export/csv', (req, res) => {
     const { ids } = req.body; // IDs des contacts à exporter (optionnel)
 
-    let sql = 'SELECT id, prenom as "Prénom", nom as "Nom", email as "Email", telephone as "Téléphone", organisation as "Organisation", tags as "Tags", notes as "Notes" FROM contacts';
+    let contactSql = 'SELECT id, prenom as "Prénom", nom as "Nom", telephone as "Téléphone", organisation as "Organisation", tags as "Tags", notes as "Notes" FROM contacts';
     let parameters = [];
 
     if (ids && ids.length > 0) {
-        sql += ' WHERE id IN (' + ids.map(() => '?').join(',') + ')';
+        contactSql += ' WHERE id IN (' + ids.map(() => '?').join(',') + ')';
         parameters.push(...ids);
     } else {
-        sql += ' ORDER BY prenom ASC, nom ASC';
+        contactSql += ' ORDER BY prenom ASC, nom ASC';
     }
 
-    const contacts = db.prepare(sql).all(...parameters);
+    const contacts = db.prepare(contactSql).all(...parameters);
 
-    // Exporter avec csv-stringify
+    // Récupérer tous les emails pour chaque contact
+    const contactsWithEmails = contacts.map(contact => {
+        const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+        return { ...contact, emails };
+    });
+
+    // Exporter avec csv-stringify (premier email + tous les autres)
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="contacts_export.csv"');
 
     const stringify = require('csv-stringify');
-    stringify(contacts, {
-        headers: ['Prénom', 'Nom', 'Email', 'Téléphone', 'Organisation', 'Tags', 'Notes'],
-        quoted: true
-    }).pipe(res);
+
+    const csvData = contactsWithEmails.map(contact => {
+        const emailList = contact.emails ? contact.emails.map(e => `[${e.type || 'work'}] ${e.email}`).join('; ') : '';
+        return {
+            'Prénom': contact.prenom,
+            'Nom': contact.nom,
+            'Email': emailList || '',
+            'Téléphone': contact.telephone || '',
+            'Organisation': contact.organisation || '',
+            'Tags': contact.tags || '',
+            'Notes': contact.notes || ''
+        };
+    });
+
+    stringify(csvData, { quoted: true }).pipe(res);
 });
 
 // POST /export/vcf - Exporter vers VCF (format simple sans bibliothèque externe)
@@ -344,10 +397,11 @@ router.post('/export/vcf', (req, res) => {
         if (contact.prenom_honneur_suffix) { vcfContent += `HONORIFIC-SUFFIX:${contact.prenom_honneur_suffix}\n`; }
         if (contact.surnom) { vcfContent += `NICKNAME:${contact.surnom}\n`; }
 
-        // Email(s)
-        if (contact.email) {
-            contact.email.split(';').forEach(email => {
-                vcfContent += `EMAIL;TYPE=INTERNET:${email.trim()}\n`;
+        // Email(s) - récupérer tous les emails depuis la table contact_emails
+        const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+        if (emails && emails.length > 0) {
+            emails.forEach(email => {
+                vcfContent += `EMAIL;TYPE=${email.type || 'INTERNET'}:${email.email}\n`;
             });
         }
 
@@ -393,33 +447,40 @@ router.post('/export/vcf', (req, res) => {
 router.post('/export/xlsx', (req, res) => {
     const { ids } = req.body; // IDs des contacts à exporter (optionnel)
 
-    let sql = 'SELECT id, prenom, nom, email, telephone, organisation, tags, notes FROM contacts';
+    let contactSql = 'SELECT id, prenom, nom, telephone, organisation, tags, notes FROM contacts';
     let parameters = [];
 
     if (ids && ids.length > 0) {
-        sql += ' WHERE id IN (' + ids.map(() => '?').join(',') + ')';
+        contactSql += ' WHERE id IN (' + ids.map(() => '?').join(',') + ')';
         parameters.push(...ids);
     } else {
-        sql += ' ORDER BY prenom ASC, nom ASC';
+        contactSql += ' ORDER BY prenom ASC, nom ASC';
     }
 
-    const contacts = db.prepare(sql).all(...parameters);
+    const contacts = db.prepare(contactSql).all(...parameters);
+
+    // Récupérer tous les emails pour chaque contact
+    const contactsWithEmails = contacts.map(contact => {
+        const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(contact.id);
+        return { ...contact, emails };
+    });
 
     // Exporter vers XLSX avec xlsx (SheetJS)
     try {
-        const workbook = require('xlsx').workbook;
-        const worksheet = require('xlsx').utils.aoa_to_sheet(contacts.map(contact => ({
+        const workbookExport = require('xlsx').workbook_new();
+
+        const worksheetData = contactsWithEmails.map(contact => ({
             'ID': contact.id,
             'Prénom': contact.prenom,
             'Nom': contact.nom,
-            'Email': contact.email || '',
+            'Email': (contact.emails ? contact.emails.map(e => e.email).join('; ') : ''),
             'Téléphone': contact.telephone || '',
             'Organisation': contact.organisation || '',
             'Tags': contact.tags || '',
             'Notes': contact.notes || ''
-        })));
+        }));
 
-        const workbookExport = require('xlsx').workbook_new();
+        //const workbookExport = require('xlsx').workbook_new();
         workbookExport.Sheets["Contacts"] = worksheet;
         workbookExport.SheetNames.push("Contacts");
 
@@ -445,14 +506,16 @@ router.post('/clear-db', (req, res) => {
 
     try {
         // Supprimer avec CASCADE pour gérer les relations étrangères :
+        // contacts -> contact_emails
         // contacts -> contact_categories -> categories
         // C'est l'ordre inverse de la cascade naturelle (contact_categories → contacts → categories)
 
+        const deleteContactEmails = db.prepare('DELETE FROM contact_emails');
         const deleteContactCategories = db.prepare('DELETE FROM contact_categories');
         const deleteContacts = db.prepare('DELETE FROM contacts');
         const deleteCategories = db.prepare('DELETE FROM categories');
-        const deleteContactCategoryLinks = db.prepare('DELETE FROM contact_categories'); // lien catégorie-contact
 
+        deleteContactEmails.run();
         deleteContactCategories.run();
         deleteContacts.run();
         deleteCategories.run();
