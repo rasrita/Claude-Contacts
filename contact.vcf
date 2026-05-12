@@ -1,0 +1,50 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Bruno Anretard
+N:Anretard;Bruno;;;
+item1.EMAIL;TYPE=INTERNET:ban@info-services.biz
+item1.X-ABLabel:Autre
+item2.EMAIL;TYPE=INTERNET:bruno.anretard@ge.com
+item2.X-ABLabel:Autre
+item3.EMAIL;TYPE=INTERNET:leboun972@orange.fr
+item3.X-ABLabel:Autre
+TEL;TYPE=CELL:0696909111
+item4.TEL:0596536332
+item4.X-ABLabel:Domicile
+item5.TEL:0596626938
+item5.X-ABLabel:Domicile
+item6.TEL:0596300281
+item6.X-ABLabel:Domicile
+TEL:+596 696 98 29 81
+TEL;TYPE=CELL:+596 696 909 111
+item7.TEL:+596 596 53 63 32
+item7.X-ABLabel:Domicile
+item8.TEL:+596 596 30 02 81
+item8.X-ABLabel:Bureau
+TEL:0590 38-1381
+item9.TEL:0596426708
+item9.X-ABLabel:Bureau
+ADR;TYPE=HOME:;;972 Ravine Braie;Rivière Pilote;;97211;;972 Ravine Braie\nR
+ ivière Pilote 97211
+ADR;TYPE=HOME:;;972 Ravine Braie;Rivière Pilote;;97211;Martinique;972 Ravin
+ e Braie\nRivière Pilote 97211\nMartinique
+CATEGORIES:Importé le 23/04,myContacts,starred
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Aaliyah 💘
+N:;Aaliyah 💘;;;
+TEL;TYPE=CELL:+590 690 331110
+ADR;TYPE=HOME:;;Residence Ti Racoone 2\nN 137;Goyave;;97128;Guadeloupe;Resi
+ dence Ti Racoone 2\nN 137\nGoyave 97128\nGuadeloupe
+BDAY:--1204
+CATEGORIES:Importé le 23/04,myContacts,starred
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:BNP NET
+N:NET;BNP;;;
+ORG:0690008085
+TITLE:0701137011
+CATEGORIES:Importé le 23/04,myContacts,starred
+END:VCARD

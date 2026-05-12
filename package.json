@@ -1,0 +1,24 @@
+{
+  "name": "app-contacts",
+  "version": "1.0.0",
+  "description": "Application de gestion de contacts complète",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "audit:fix": "npm audit --allow=401,403"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.2.2",
+    "cookie-parser": "^1.4.6",
+    "csv-stringify": "^6.4.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
