@@ -106,10 +106,10 @@ async function parseVCF(vcfContent) {
     let currentContact = null;
     let count = 0;
 
-    const fnRegex = /(?:FN[^:]*:)?([^,\n]+)/i;
-    const gnRegex = /(?:N[^:]*:)?([^,\/\n]+)/i;
-    const emailRegex = /EMAIL:(?:[^;\n]*;)*?(.*?)(?=[;,]|$)|TYPE:INTERNET/gi;
-    const telRegex = /TEL:(?:[^;\n]*;)*?(.*?)(?=[;,]|$)|TYPE:WORK/i;
+    const fnRegex = /FN:(.+)/i;   ///(?:FN[^:]*:)?([^,\n]+)/i;
+    const gnRegex = /^N:([^,\/\n]+)$/ ///(?:N[^:]*:)?([^,\/\n]+)/i;
+    const emailRegex = /EMAIL;TYPE=INTERNET:(.+)/gi ///EMAIL:(?:[^;\n]*;)*?(.*?)(?=[;,]|$)|TYPE:INTERNET/gi;
+    const telRegex = /(?:TEL:|TEL;TYPE=CELL:)(.+)/gi ///TEL:(?:[^;\n]*;)*?(.*?)(?=[;,]|$)|TYPE:WORK/i;
     const orgRegex = /(?:CATEGORIES[^;\n]*;)*?(.*?)NAME(.*?)(?=[;,]|$)|[Oo][Rr][Gg]:(.+)$/i;
 
     function addContact() {
@@ -188,16 +188,16 @@ async function parseVCF(vcfContent) {
                 currentContact.givenName = parts[1] || '';
             } 
             else if (upperLine.includes('EMAIL;')) {
-//                console.debug('Find eamil ',line);
+                //console.debug('Find eamil ',line);
                 let telValue = extractSingleMatch(telRegex, { type: 'INTERNET' }) || line.split(/EMAIL.*:/i)[1];
                 if (telValue) {
                     const bracketsMatch = telValue.match(/[\[()][-+0-9\s]+/);
                     currentContact.emails.push(bracketsMatch ? bracketsMatch[0] : telValue.trim());
                 }
-//                currentContact.emails.push(...extractAllMatches(line, emailRegex));
+                currentContact.emails.push(...extractAllMatches(line, emailRegex));
             } 
-            else if (upperLine.includes('TEL;')) {
-//                console.debug('Find Tel ',line);
+            else if (upperLine.includes('TEL;') || upperLine.includes('TEL:')) {
+                //console.debug('Find Tel ',line);
                 let telValue = extractSingleMatch(telRegex, { type: 'CELL' }) || line.split(/TEL.*:/i)[1];
                 if (telValue) {
                     const bracketsMatch = telValue.match(/[\[()][-+0-9\s]+/);
@@ -205,17 +205,17 @@ async function parseVCF(vcfContent) {
                 }
             } 
             else if (upperLine.includes('ADR;')) {
-//                console.debug('ADR ',line);
+                console.debug('ADR ',line);
                 const orgMatch = line.match(/ADR;(.*)/i);
                 currentContact.org = orgMatch ? orgMatch[1].split(';')[0] : '';
             } 
             else if (upperLine.includes('CATEGORIES:')) {
-//                console.debug('CATEGORIES ',line);
+                console.debug('CATEGORIES ',line);
                 currentContact.note = line.split(/CATEGORIES:/i)[1].trim();
             }
         }
     }
-    console.debug('const lastContact = addContact();');
+ //   console.debug('const lastContact = addContact();');
     const lastContact = addContact();
     if (lastContact && (lastContact.fullName || lastContact.email)) {
         contacts.push(lastContact);
@@ -244,7 +244,7 @@ async function parseVCF(vcfContent) {
 
             if (response.ok) {
                 count++;
-                console.debug('importContactsVCF ', nom, prenom, emails, telephone, telephones, organisation, tags );
+                //console.debug('importContactsVCF ', nom, prenom, emails, telephone, telephones, organisation, tags );
             } else {
                 console.error('Erreur création contact:', await response.text());
             }
@@ -504,7 +504,7 @@ function toggleElement(element, show) {
  * Charger tous les contacts depuis l'API
  */
 async function loadContacts() {
-    console.debug('loadContacts()');
+    //console.debug('loadContacts()');
     try {
         const response = await fetch(`${API_BASE}/contacts`);
         const result = await response.json();
@@ -607,10 +607,11 @@ async function updateContact(id, contactData) {
  * Supprimer un contact
  */
 async function deleteContact(id) {
+    /*
     if (!confirm('Voulez-vous vraiment supprimer ce contact ? Cette action est irréversible.')) {
         return false;
     }
-
+    */
     try {
         const response = await fetch(`${API_BASE}/contacts/${id}`, {
             method: 'DELETE'
@@ -926,13 +927,23 @@ function renderCategoriesList() {
     }
 
     container.innerHTML = categories.map(cat => `
-        <div class="category-card" style="background: ${cat.couleur}20; border-left: 4px solid ${cat.couleur};">
+        <div class="category-card" style="background: ${cat.couleur}20; border-left: 4px solid ${cat.couleur}; cursor: pointer;" data-id="${cat.id}" onclick="openCategoryEdit(${cat.id})">
             <div class="category-icon" style="background-color: ${cat.couleur}; color: white;">
                 <i class="fas fa-tag"></i>
             </div>
             <span class="category-name">${escapeHtml(cat.nom)}</span>
         </div>
     `).join('');
+
+    // Ajouter écouteur pour fermer le modal d'édition de catégorie lors du clic hors
+    const categoryEditModal = document.getElementById('category-modal');
+    if (categoryEditModal) {
+        categoryEditModal.addEventListener('click', (e) => {
+            if (e.target === categoryEditModal) {
+                closeCategoryEditModal();
+            }
+        });
+    }
 }
 
 // ==============================
@@ -970,6 +981,39 @@ function openCategoryModal(category = null) {
     }
 
     modal.classList.add('show');
+}
+
+/**
+ * Ouvrir le modal d'édition d'une catégorie (avec ses données)
+ */
+function openCategoryEdit(categoryId) {
+    loadCategories().then(result => {
+        if (result.success && result.data) {
+            const category = result.data.find(c => c.id === categoryId);
+            if (category) {
+                openCategoryModal(category);
+            }
+        }
+    }).catch(err => {
+        console.error('Erreur chargement catégorie pour édition:', err);
+    });
+}
+
+/**
+ * Fermer le modal d'édition d'une catégorie
+ */
+function closeCategoryEditModal() {
+    const modal = document.getElementById('category-modal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+
+    const categoryId = document.getElementById('category-id').value;
+    if (categoryId) {
+        try {
+            localStorage.removeItem('edit_category_' + categoryId);
+        } catch (e) {}
+    }
 }
 
 function closeCategoryModal() {
@@ -1579,6 +1623,7 @@ async function exportContacts(format, contactIds) {
  * Charger le dashboard
  */
 async function loadDashboard() {
+    console.debug('loadDashboard()');
     updatePageTitle('Tableau de bord');
 
     // Statistiques globales
@@ -1643,6 +1688,7 @@ async function loadDashboard() {
         }
     } catch (e) {
         // Ignorer si localStorage invalide
+        console.info('localStorage invalide');
     }
 }
 

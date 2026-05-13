@@ -9,7 +9,7 @@ const { db } = require('../db/database');
 exports.getAllContacts = (req, res) => {
     try {
         // Récupérer tous les contacts
-        const contacts = db.prepare('SELECT id, prenom, nom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, conjoint, enfants, tags, notes, created_at, updated_at FROM contacts ORDER BY prenom ASC, nom ASC').all();
+        const contacts = db.prepare('SELECT id, prenom, nom, titre, prenom_honneur_prefix, prenom_honneur_suffix, surnom, email, telephone, organisation, adresse, code_postal, pays, ville, region, anniversaire, conjoint, enfants, tags, notes, created_at, updated_at FROM contacts ORDER BY prenom ASC, nom ASC').all();
 
         // Ajouter les catégories et emails pour chaque contact
         const contactsWithDetails = contacts.map(contact => {
@@ -58,7 +58,9 @@ exports.getContactById = (req, res) => {
         // Récupérer les emails
         const emails = db.prepare('SELECT email, type FROM contact_emails WHERE contact_id = ? ORDER BY type, email').all(id);
 
-        res.json({ success: true, data: { ...contact, categories: categories || [], emails: emails || [] } });
+        const telephones = db.prepare('SELECT telephone, type FROM contact_telephones WHERE contact_id = ? ORDER BY type, telephone').all(id);
+        
+        res.json({ success: true, data: { ...contact, categories: categories || [], emails: emails || [], telephones: telephones|| []  } });
     } catch (error) {
         console.error('Erreur getContactById:', error);
         res.status(500).json({
