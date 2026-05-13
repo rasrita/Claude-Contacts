@@ -1,548 +1,550 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mes Contacts - Application de Gestion</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- FontAwesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+  </head>
+  <body>
     <!-- Barre de navigation latérale -->
     <nav class="sidebar">
-        <div class="logo">
-            <i class="fas fa-address-book"></i>
-            <span>Mes Contacts</span>
+      <div class="logo"> <i class="fas fa-address-book"></i> <span>Mes
+          Contacts</span> </div>
+      <ul class="nav-links">
+        <li><a href="#dashboard" class="active"><i class="fas fa-home"></i><span>Tableau
+              de bord</span></a></li>
+        <li><a href="#contacts"><i class="fas fa-users"></i><span>Contacts</span></a></li>
+        <li><a href="#categories"><i class="fas fa-tags"></i><span>Catégories</span></a></li>
+        <li><a href="#import-export"><i class="fas fa-exchange-alt"></i><span>Import/Export</span></a></li>
+        <li><a href="#settings"><i class="fas fa-cog"></i><span>Paramètres</span></a></li>
+      </ul>
+      <div class="stats-panel">
+        <div class="stat-card">
+          <div class="stat-icon blue"> <i class="fas fa-users"></i> </div>
+          <div class="stat-info"> <span id="total-contacts" class="stat-value">Chargement...</span>
+            <small>Contacts</small> </div>
         </div>
-        <ul class="nav-links">
-            <li><a href="#dashboard" class="active"><i class="fas fa-home"></i><span>Tableau de bord</span></a></li>
-            <li><a href="#contacts"><i class="fas fa-users"></i><span>Contacts</span></a></li>
-            <li><a href="#categories"><i class="fas fa-tags"></i><span>Catégories</span></a></li>
-            <li><a href="#import-export"><i class="fas fa-exchange-alt"></i><span>Import/Export</span></a></li>
-            <li><a href="#settings"><i class="fas fa-cog"></i><span>Paramètres</span></a></li>
-        </ul>
-        <div class="stats-panel">
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-info">
-                    <span id="total-contacts" class="stat-value">Chargement...</span>
-                    <small>Contacts</small>
-                </div>
-            </div>
-        </div>
-        <div class="sidebar-footer">
-            <p>Voir les statistiques détaillées à la page du dashboard.</p>
-        </div>
+      </div>
+      <div class="sidebar-footer">
+        <p>Voir les statistiques détaillées à la page du dashboard.</p>
+      </div>
     </nav>
-
     <!-- Contenu principal -->
     <main class="main-content">
-        <!-- En-tête avec recherche globale -->
-        <header class="top-bar">
-            <div class="page-header">
-                <h1 id="page-title">Tableau de bord</h1>
-                <p class="subtitle">Bienvenue sur votre application de gestion de contacts</p>
-            </div>
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" id="global-search" placeholder="Rechercher un contact..." class="search-input">
-            </div>
-        </header>
-
-        <!-- Page: Tableau de bord -->
-        <section id="dashboard" class="page-section active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon blue">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span id="dashboard-total-contacts" class="stat-value">Chargement...</span>
-                        <small>Total contacts</small>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon green">
-                        <i class="fas fa-tags"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span id="dashboard-total-categories" class="stat-value">Chargement...</span>
-                        <small>Catégories</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Derniers contacts -->
-            <div class="card last-contacts-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-clock"></i> Derniers contacts ajoutés</h2>
-                    <button id="load-more-contacts" class="btn btn-secondary"><i class="fas fa-plus"></i> Charger plus</button>
-                </div>
-                <div class="card-body last-contacts-list" id="last-contacts">
-                    <p class="empty-state">Chargement des derniers contacts...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Page: Contacts -->
-        <section id="contacts" class="page-section">
-            <!-- Bouton Ajouter un contact -->
-            <div class="card contacts-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-users"></i> Liste des contacts</h2>
-                    <button id="add-contact-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Nouveau contact</button>
-                </div>
-
-                <!-- Formulaire modal d'ajout/édition -->
-                <div id="contact-modal" class="modal">
-                    <div class="modal-content contact-form-modal">
-                        <div class="modal-header">
-                            <h3 id="contact-modal-title">Ajouter un contact</h3>
-                            <button id="close-modal-btn" class="btn-close">&times;</button>
-                        </div>
-                        <form id="contact-form">
-                            <!-- En-tête du formulaire -->
-                            <div class="form-header-info">
-                                <input type="hidden" id="contact-id">
-                                <button type="button" id="cancel-edit-btn" class="btn btn-secondary cancel-btn" style="display:none;">Annuler</button>
-                            </div>
-
-                            <!-- Section: Informations personnelles -->
-                            <h4><i class="fas fa-user-circle"></i> Informations personnelles</h4>
-
-                            <!-- Champ Nom -->
-                            <div class="form-group full-width">
-                                <label for="nom"><i class="fas fa-user"></i> Nom <span class="required">*</span></label>
-                                <input type="text" id="nom" required placeholder="ex: Dupont">
-                                <small>Le nom de famille du contact</small>
-                            </div>
-
-                            <!-- Champ Prénom -->
-                            <div class="form-group full-width">
-                                <label for="prenom"><i class="fas fa-user"></i> Prénom <span class="required">*</span></label>
-                                <input type="text" id="prenom" required placeholder="ex: Jean">
-                                <small>Le prénom du contact</small>
-                            </div>
-
-                            <!-- Champ Titre -->
-                            <div class="form-group full-width">
-                                <label for="titre"><i class="fas fa-user-tag"></i> Titre (optionnel)</label>
-                                <input type="text" id="titre" placeholder="Dr., Prof., Ing., Mme, M.">
-                                <small>Titre professionnel : Dr., Prof., Ing., ou honorifique</small>
-                            </div>
-
-                            <!-- Champ Surnom -->
-                            <div class="form-group full-width">
-                                <label for="surnom"><i class="fas fa-masks"></i> Surnom (optionnel)</label>
-                                <input type="text" id="surnom" placeholder="Jeanne, Toto">
-                                <small>Surnom ou diminutif (sans espace)</small>
-                            </div>
-
-                            <!-- Grille pour Email et Téléphone -->
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
-                                    <input type="email" id="email" placeholder="jean.dupont@email.com">
-                                </div>
-                                <div class="form-group">
-                                    <label for="telephone"><i class="fas fa-phone"></i> Téléphone</label>
-                                    <input type="tel" id="telephone" placeholder="+33 1 23 45 67 89">
-                                </div>
-                            </div>
-
-                            <!-- Section: Informations organisationnelles -->
-                            <h4><i class="fas fa-briefcase"></i> Organisation</h4>
-
-                            <!-- Champ Organisation -->
-                            <div class="form-group full-width">
-                                <label for="organisation"><i class="fas fa-building"></i> Organisation</label>
-                                <input type="text" id="organisation" placeholder="Ma Entreprise SAS">
-                                <small>Nom de l'organisation ou entreprise</small>
-                            </div>
-
-                            <!-- Grille pour Rôle et Conjoint -->
-                            <div class="form-grid">
-                                <div class="form-group full-width">
-                                    <label for="conjoint"><i class="fas fa-users"></i> Conjoint(e) (optionnel)</label>
-                                    <input type="text" id="conjoint" placeholder="Sophie Dupont">
-                                    <small>Nom complet du conjoint</small>
-                                </div>
-                            </div>
-
-                            <!-- Section: Adresse -->
-                            <h4><i class="fas fa-map-marker-alt"></i> Adresse (optionnel)</h4>
-
-                            <!-- Grille pour adresse et code postal -->
-                            <div class="form-grid">
-                                <div class="form-group full-width">
-                                    <label for="adresse"><i class="fas fa-location-dot"></i> Adresse</label>
-                                    <input type="text" id="adresse" placeholder="12 rue de la Paix, Appartement 4">
-                                    <small>Rue ou adresse complète</small>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="code_postal"><i class="fas fa-hashtag"></i> Code postal (optionnel)</label>
-                                    <input type="text" id="code_postal" placeholder="75001">
-                                    <small>Code postal en chiffres</small>
-                                </div>
-                            </div>
-
-                            <!-- Grille pour ville, région, pays -->
-                            <div class="form-grid">
-                                <div class="form-group full-width">
-                                    <label for="ville"><i class="fas fa-city"></i> Ville (optionnel)</label>
-                                    <input type="text" id="ville" placeholder="Paris">
-                                    <small>Nom de la ville</small>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="region"><i class="fas fa-layer-group"></i> Région / Département (optionnel)</label>
-                                    <input type="text" id="region" placeholder="Île-de-France">
-                                    <small>Région ou département</small>
-                                </div>
-                            </div>
-
-                            <!-- Grille pour pays et tags -->
-                            <div class="form-grid">
-                                <div class="form-group full-width">
-                                    <label for="pays"><i class="fas fa-globe"></i> Pays (optionnel)</label>
-                                    <input type="text" id="pays" placeholder="France">
-                                    <small>Nom du pays</small>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="tags-input"><i class="fas fa-tags"></i> Tags/Catégories</label>
-                                    <input type="text" id="tags-input" placeholder="Lien, Client (séparés par ;)">
-                                    <small>Séparez les tags avec des point-virgules. Cliquez sur "Enregistrer" pour créer les catégories.</small>
-                                </div>
-                            </div>
-
-                            <!-- Section: Dates et événements -->
-                            <h4><i class="fas fa-calendar-alt"></i> Dates (optionnel)</h4>
-
-                            <!-- Champ Anniversaire -->
-                            <div class="form-group full-width">
-                                <label for="anniversaire"><i class="fas fa-birthday-cake"></i> Anniversaire (optionnel)</label>
-                                <input type="date" id="anniversaire" placeholder="ex: 1985-06-15">
-                                <small>Format YYYY-MM-DD. Ex: 1985-06-15</small>
-                            </div>
-
-                            <!-- Section: Notes -->
-                            <h4><i class="fas fa-sticky-note"></i> Notes (optionnel)</h4>
-
-                            <!-- Champ Notes -->
-                            <div class="form-group full-width">
-                                <label for="notes"><i class="fas fa-comment-alt"></i> Notes</label>
-                                <textarea id="notes" rows="5" placeholder="Informations supplémentaires sur ce contact..."></textarea>
-                                <small>Notes personnelles, coordonnées alternatives, etc.</small>
-                            </div>
-
-                            <!-- Boutons -->
-                            <div class="form-actions">
-                                <button type="submit" id="save-contact-btn" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
-                                <button type="button" id="delete-contact-btn" class="btn btn-danger delete-btn" style="display:none;"><i class="fas fa-trash"></i> Supprimer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Liste des contacts -->
-                <div class="contacts-grid" id="contacts-list">
-                    <p class="empty-state">Chargement des contacts...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Page: Catégories -->
-        <section id="categories" class="page-section">
-            <div class="card categories-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-tags"></i> Gestion des catégories</h2>
-                    <button id="add-category-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Nouvelle catégorie</button>
-                </div>
-
-                <!-- Modal pour ajouter/éditer une catégorie -->
-                <div id="category-modal" class="modal">
-                    <div class="modal-content category-form-modal">
-                        <div class="modal-header">
-                            <h3 id="category-modal-title">Ajouter une catégorie</h3>
-                            <button id="close-category-modal-btn" class="btn-close">&times;</button>
-                        </div>
-                        <form id="category-form">
-                            <input type="hidden" id="category-id">
-
-                            <div class="form-group full-width">
-                                <label for="category-nom"><i class="fas fa-tag"></i> Nom de la catégorie</label>
-                                <input type="text" id="category-nom" required placeholder="ex: Amis, Famille, Clients">
-                            </div>
-
-                            <div class="form-group full-width">
-                                <label for="category-couleur"><i class="fas fa-palette"></i> Couleur</label>
-                                <input type="color" id="category-couleur" value="#70ad47">
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" id="save-category-btn" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
-                                <button type="button" id="delete-category-btn" class="btn btn-danger delete-category-btn" style="display:none;"><i class="fas fa-trash"></i> Supprimer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Liste des catégories -->
-                <div class="categories-grid" id="categories-list">
-                    <p class="empty-state">Chargement des catégories...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Page: Import/Export -->
-        <section id="import-export" class="page-section">
-            <div class="card import-export-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-exchange-alt"></i> Import / Export</h2>
-                </div>
-
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="import"><i class="fas fa-download"></i> Importer</button>
-                    <button class="tab-btn" data-tab="export"><i class="fas fa-upload"></i> Exporter</button>
-                </div>
-
-                <!-- Onglet: Import -->
-                <div class="tab-content active" id="import-tab">
-                    <div class="upload-section">
-                        <div class="upload-area" id="csv-upload-area">
-                            <i class="fas fa-file-csv upload-icon"></i>
-                            <h3>Fichier CSV</h3>
-                            <p>Format standard : Prénom, Nom, Email, Téléphone, Organisation</p>
-                            <input type="file" id="csv-file-input" accept=".csv" onchange="handleCsvUpload(this.files[0]);" style="display:none;">
-                        </div>
-
-                        <div class="upload-section">
-                            <div class="upload-area" id="vcf-upload-area">
-                                <i class="fas fa-address-card upload-icon"></i>
-                                <h3>Fichier VCF (vCard)</h3>
-                                <p>Format standard pour les contacts vCard</p>
-                                <input type="file" id="vcf-file-input" accept=".vcf" onchange="handleVcfUpload(this.files[0]);" style="display:none;">
-                            </div>
-                        </div>
-
-                        <button id="import-cancel-btn" class="btn btn-secondary" style="display:none;">Annuler l'import</button>
-                    </div>
-
-                    <div class="upload-status" id="upload-status">
-                        <p>Situation actuelle : Aucun fichier en attente</p>
-                    </div>
-                </div>
-
-                <!-- Onglet: Export -->
-                <div class="tab-content" id="export-tab">
-                    <div class="export-options">
-                        <h3><i class="fas fa-file-export"></i> Formats disponibles</h3>
-                        <ul class="export-format-list">
-                            <li>
-                                <label>
-                                    <input type="checkbox" id="export-csv-checkbox" checked>
-                                    <span>CSV (excellence)</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="checkbox" id="export-vcf-checkbox" checked>
-                                    <span>VCF (vCard)</span>
-                                </label>
-                            </li>
-                            <li>
-                                <label>
-                                    <input type="checkbox" id="export-xlsx-checkbox" checked>
-                                    <span>XLSX (Excel moderne)</span>
-                                </label>
-                            </li>
-                        </ul>
-
-                        <!-- Grille d'aperçu des contacts pour export -->
-                        <div class="preview-contacts">
-                            <h4><i class="fas fa-eye"></i> Contacts à inclure dans l'export</h4>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="export-all-contacts" checked>
-                                Tous les contacts
-                            </label>
-                        </div>
-
-                        <button id="export-btn" class="btn btn-primary"><i class="fas fa-file-download"></i> Télécharger l'export</button>
-                    </div>
-
-                    <!-- Modal de prévisualisation -->
-                    <div id="export-preview-modal" class="modal">
-                        <div class="modal-content export-preview-modal">
-                            <div class="modal-header">
-                                <h3>Aperçu de l'export</h3>
-                                <button id="close-export-preview-btn" class="btn-close">&times;</button>
-                            </div>
-                            <div class="preview-content">
-                                <div id="export-preview-list"></div>
-                                <p class="preview-count" id="preview-contact-count"></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Documentation vCard (affichée une seule fois au premier lancement) -->
-        <div id="vcard-doc-modal" class="modal" style="display:none;">
-            <div class="modal-content" style="max-width:900px;">
-                <div class="modal-header">
-                    <h3><i class="fas fa-info-circle"></i> Champs vCard standards - Documentation</h3>
-                    <button id="close-vcard-doc-btn" class="btn-close">&times;</button>
-                </div>
-                <div class="modal-body" style="font-size:14px;">
-                    <p>Cette application supporte tous les champs vCard (vCard 3.0) standards pour l'import/export de fichiers VCF.</p>
-
-                    <h4><i class="fas fa-user"></i> Champs d'identité :</h4>
-                    <table style="width:100%;border-collapse:collapse;">
-                        <tr style="border-bottom:1px solid #eee;"><th style="padding:8px;">Champ vCard</th><th>Description</th><th>Exemple</th></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>NOM;FN</strong></td><td>Nom complet (valeur FN)</td><td>Dupont</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>PRENOM</strong></td><td>Prénom</td><td>Jean</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>TITLE</strong></td><td>Titre professionnel</td><td>Dr.</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>PREFIX/PREFIX2</strong></td><td>Préfixe d'honneur (HONORIFIC)</td><td>Mme / M.</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>SUFFIX/SUFFIX2</strong></td><td>Suffixe d'honneur</td><td>Jr. / Sr.</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>NICKNAME</strong></td><td>Surnom</td><td>Jeanne</td></tr>
-                    </table>
-
-                    <h4><i class="fas fa-calendar"></i> Champs de dates :</h4>
-                    <table style="width:100%;border-collapse:collapse;">
-                        <tr style="border-bottom:1px solid #eee;"><th style="padding:8px;">Champ vCard</th><th>Description</th><th>Format attendu</th></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>BDAY</strong></td><td>Date d'anniversaire</td><td>YYYY-MM-DD (ex: 1985-06-15)</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>BIRTHDAY-TIMEZONE</strong></td><td>Fuseau horaire de l'anniversaire</td><td>(ex: Europe/Paris)</td></tr>
-                    </table>
-
-                    <h4><i class="fas fa-building"></i> Champs d'organisation :</h4>
-                    <table style="width:100%;border-collapse:collapse;">
-                        <tr style="border-bottom:1px solid #eee;"><th style="padding:8px;">Champ vCard</th><th>Description</th><th>Exemple</th></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>ORGANIZATIONNAME/ORG</strong></td><td>Nom de l'organisation</td><td>Ma Entreprise SAS</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>ROLE</strong></td><td>Rôle dans l'organisation</td><td>CEO</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>NOTE</strong></td><td>Notes générales</td><td>Téléphone portable : 06 12 34 56 78</td></tr>
-                    </table>
-
-                    <h4><i class="fas fa-map-marker-alt"></i> Champs d'adresse :</h4>
-                    <table style="width:100%;border-collapse:collapse;">
-                        <tr style="border-bottom:1px solid #eee;"><th style="padding:8px;">Champ vCard</th><th>Description</th><th>Exemple</th></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>ADR</strong></td><td>Adresse (format structuré)</td><td>Rue de la Paix 42, 75001 Paris</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>STREET/ADR-STREET</strong></td><td>Rue (composant adr)</td><td>Rue de la Paix 42</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>LOCALITY/CITY</strong></td><td>Ville</td><td>Paris</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>REGION/SUBDIVISION</strong></td><td>Région / département</td><td>Île-de-France</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>POSTALCODE/ZIPCODE</strong></td><td>Code postal</td><td>75001</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>COUNTRY-REGION/COUNTRY</strong></td><td>Pays</td><td>France</td></tr>
-                    </table>
-
-                    <h4><i class="fas fa-users"></i> Champs familiaux :</h4>
-                    <table style="width:100%;border-collapse:collapse;">
-                        <tr style="border-bottom:1px solid #eee;"><th style="padding:8px;">Champ vCard</th><th>Description</th><th>Exemple</th></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>SPOUSE</strong></td><td>Conjoint(e)</td><td>Sophie Dupont</td></tr>
-                        <tr style="border-bottom:1px solid #eee;"><td style="padding:8px;"><strong>FATHER/CHILD</strong></td><td>Père / Enfants</td><td>Marc Dupont; Thomas; Julie</td></tr>
-                    </table>
-
-                    <h4><i class="fas fa-tag"></i> Tags personnalisés :</h4>
-                    <p>Vous pouvez ajouter des tags personnalisés via :</p>
-                    <ul>
-                        <li>Le champ <strong>X-CUSTOM-TAGS</strong> dans les fichiers VCF</li>
-                        <li>En séparant les tags par des point-virgules dans le formulaire (ex: "Client;VIP;Lien")</li>
-                    </ul>
-
-                    <p><i class="fas fa-info-circle"></i> <strong>Note :</strong> Les formats de champs vCard peuvent varier selon l'application créatrice du fichier VCF. Cette application normalise les données à l'import.</p>
-
-                    <div style="text-align:right;margin-top:20px;">
-                        <button id="accept-vcard-doc-btn" class="btn btn-secondary">Compris, fermer</button>
-                    </div>
-                </div>
-            </div>
+      <!-- En-tête avec recherche globale -->
+      <header class="top-bar">
+        <div class="page-header">
+          <h1 id="page-title">Tableau de bord</h1>
+          <p class="subtitle">Bienvenue sur votre application de gestion de
+            contacts</p>
         </div>
-
-        <!-- Page: Paramètres -->
-        <section id="settings" class="page-section">
-            <div class="card settings-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-cog"></i> Paramètres</h2>
-                </div>
-
-                <!-- Configuration du site -->
-                <div class="config-section">
-                    <h3><i class="fas fa-home"></i> Informations sur le site</h3>
-                    <div class="config-item">
-                        <label>Nom du site</label>
-                        <input type="text" id="config-site-name">
-                    </div>
-                </div>
-
-                <!-- Section avec bouton -->
-                <div class="card-section-with-btn">
-                    <div class="section-header">
-                        <h3><i class="fas fa-info-circle"></i> À propos</h3>
-                        <button id="load-stats-btn" class="btn btn-primary"><i class="fas fa-sync-alt"></i> Actualiser</button>
-                    </div>
-
-                    <div class="stats-summary">
-                        <div class="stat-row">
-                            <span><i class="fas fa-users"></i> Contacts au total :</span>
-                            <strong id="settings-total-contacts">0</strong>
-                        </div>
-                        <div class="stat-row">
-                            <span><i class="fas fa-tags"></i> Catégories disponibles :</span>
-                            <strong id="settings-total-categories">0</strong>
-                        </div>
-                    </div>
-
-                    <!-- Dernier contact créé -->
-                    <div class="last-info" id="settings-last-contact">
-                        <p><small>Aucune donnée disponible. Actualisez les statistiques pour voir le dernier contact créé.</small></p>
-                    </div>
-
-                    <!-- Section vider la base de données -->
-                    <div class="card-section-with-btn danger-section">
-                        <div class="section-header">
-                            <h3><i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i> Gestion des données</h3>
-                        </div>
-
-                        <div class="danger-notice">
-                            <p style="margin-bottom: 12px;"><i class="fas fa-exclamation-circle"></i> Attention : cette action est irréversible !</p>
-                        </div>
-
-                        <div class="form-actions" style="display:flex; flex-direction:column; gap:10px;">
-                            <button id="clear-database-btn" class="btn btn-danger danger-btn">
-                                <i class="fas fa-trash-alt"></i> Vider la base de données
-                            </button>
-                            <p style="font-size: 12px; color: #666; margin-left: auto;"><small>Vérifier l'état</small></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Modal: Doubleton/Fusion -->
-        <div id="duplicate-modal" class="modal">
-            <div class="modal-content duplicate-modal">
-                <div class="modal-header">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Contacts similaires trouvés</h3>
-                    <button id="close-duplicate-modal-btn" class="btn-close">&times;</button>
-                </div>
-                <div class="modal-body duplicate-list" id="duplicate-contacts-list">
-                    <!-- Liste des doubles -->
-                </div>
-                <div class="modal-footer">
-                    <button id="close-duplicates-btn" class="btn btn-secondary">Fermer</button>
-                    <button id="merge-selected-btn" class="btn btn-warning" style="display:none;">Fusionner sélectionnés</button>
-                </div>
-            </div>
+        <div class="search-container"> <i class="fas fa-search search-icon"></i>
+          <input id="global-search" placeholder="Rechercher un contact..." class="search-input"
+            type="text"> </div>
+      </header>
+      <!-- Page: Tableau de bord -->
+      <section id="dashboard" class="page-section active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"> <i class="fas fa-users"></i> </div>
+            <div class="stat-info"> <span id="dashboard-total-contacts" class="stat-value">Chargement...</span>
+              <small>Total contacts</small> </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"> <i class="fas fa-tags"></i> </div>
+            <div class="stat-info"> <span id="dashboard-total-categories" class="stat-value">Chargement...</span>
+              <small>Catégories</small> </div>
+          </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p><small>&copy; 2026 Application de Gestion de Contacts</small></p>
-        </footer>
+        <!-- Derniers contacts -->
+        <div class="card last-contacts-card">
+          <div class="card-header">
+            <h2><i class="fas fa-clock"></i> Derniers contacts ajoutés</h2>
+            <button id="load-more-contacts" class="btn btn-secondary"><i class="fas fa-plus"></i>
+              Charger plus</button> </div>
+          <div class="card-body last-contacts-list" id="last-contacts">
+            <p class="empty-state">Chargement des derniers contacts...</p>
+          </div>
+        </div>
+      </section>
+      <!-- Page: Contacts -->
+      <section id="contacts" class="page-section">
+        <!-- Bouton Ajouter un contact -->
+        <div class="card contacts-card">
+          <div class="card-header">
+            <h2><i class="fas fa-users"></i> Liste des contacts</h2>
+            <button id="add-contact-btn" class="btn btn-primary"><i class="fas fa-plus"></i>
+              Nouveau contact</button> </div>
+          <!-- Formulaire modal d'ajout/édition -->
+          <div id="contact-modal" class="modal">
+            <div class="modal-content contact-form-modal">
+              <div class="modal-header">
+                <h3 id="contact-modal-title">Ajouter un contact</h3>
+                <button id="close-modal-btn" class="btn-close">×</button> </div>
+              <form id="contact-form">
+                <!-- En-tête du formulaire -->
+                <div class="form-header-info"> <input id="contact-id" type="hidden">
+                  <button type="button" id="cancel-edit-btn" class="btn btn-secondary cancel-btn"
+                    style="display:none;">Annuler</button> </div>
+                <!-- Section: Informations personnelles -->
+                <h4><i class="fas fa-user-circle"></i> Informations personnelles</h4>
+                <!-- Champ Nom -->
+                <div class="form-group full-width"> <label for="nom"><i class="fas fa-user"></i>
+                    Nom <span class="required">*</span></label> <input id="nom"
+                    required="" placeholder="ex: Dupont" type="text"> <small>Le
+                    nom de famille du contact</small> </div>
+                <!-- Champ Prénom -->
+                <div class="form-group full-width"> <label for="prenom"><i class="fas fa-user"></i>
+                    Prénom <span class="required">*</span></label> <input id="prenom"
+                    required="" placeholder="ex: Jean" type="text"> <small>Le
+                    prénom du contact</small> </div>
+                <!-- Champ Titre -->
+                <div class="form-group full-width"> <label for="titre"><i class="fas fa-user-tag"></i>
+                    Titre (optionnel)</label> <input id="titre" placeholder="Dr., Prof., Ing., Mme, M."
+                    type="text"> <small>Titre professionnel : Dr., Prof., Ing.,
+                    ou honorifique</small> </div>
+                <!-- Champ Surnom -->
+                <div class="form-group full-width"> <label for="surnom"><i class="fas fa-masks"></i>
+                    Surnom (optionnel)</label> <input id="surnom" placeholder="Jeanne, Toto"
+                    type="text"> <small>Surnom ou diminutif (sans espace)</small>
+                </div>
+                <!-- Grille pour Email et Téléphone -->
+                <div class="form-grid">
+                  <div class="form-group"> <label for="email"><i class="fas fa-envelope"></i>
+                      Email</label> <input id="email" placeholder="jean.dupont@email.com"
+                      type="email"> </div>
+                  <div class="form-group"> <label for="telephone"><i class="fas fa-phone"></i>
+                      Téléphone</label> <input id="telephone" placeholder="+33 1 23 45 67 89"
+                      type="tel"> </div>
+                </div>
+                <!-- Section: Informations organisationnelles -->
+                <h4><i class="fas fa-briefcase"></i> Organisation</h4>
+                <!-- Champ Organisation -->
+                <div class="form-group full-width"> <label for="organisation"><i
+                      class="fas fa-building"></i> Organisation</label> <input
+                    id="organisation" placeholder="Ma Entreprise SAS" type="text">
+                  <small>Nom de l'organisation ou entreprise</small> </div>
+                <!-- Grille pour Rôle et Conjoint -->
+                <div class="form-grid">
+                  <div class="form-group full-width"> <label for="conjoint"><i
+                        class="fas fa-users"></i> Conjoint(e) (optionnel)</label>
+                    <input id="conjoint" placeholder="Sophie Dupont" type="text">
+                    <small>Nom complet du conjoint</small> </div>
+                </div>
+                <!-- Section: Adresse -->
+                <h4><i class="fas fa-map-marker-alt"></i> Adresse (optionnel)</h4>
+                <!-- Grille pour adresse et code postal -->
+                <div class="form-grid">
+                  <div class="form-group full-width"> <label for="adresse"><i class="fas fa-location-dot"></i>
+                      Adresse</label> <input id="adresse" placeholder="12 rue de la Paix, Appartement 4"
+                      type="text"> <small>Rue ou adresse complète</small> </div>
+                  <div class="form-group full-width"> <label for="code_postal"><i
+                        class="fas fa-hashtag"></i> Code postal (optionnel)</label>
+                    <input id="code_postal" placeholder="75001" type="text"> <small>Code
+                      postal en chiffres</small> </div>
+                </div>
+                <!-- Grille pour ville, région, pays -->
+                <div class="form-grid">
+                  <div class="form-group full-width"> <label for="ville"><i class="fas fa-city"></i>
+                      Ville (optionnel)</label> <input id="ville" placeholder="Paris"
+                      type="text"> <small>Nom de la ville</small> </div>
+                  <div class="form-group full-width"> <label for="region"><i class="fas fa-layer-group"></i>
+                      Région / Département (optionnel)</label> <input id="region"
+                      placeholder="Île-de-France" type="text"> <small>Région ou
+                      département</small> </div>
+                </div>
+                <!-- Grille pour pays et tags -->
+                <div class="form-grid">
+                  <div class="form-group full-width"> <label for="pays"><i class="fas fa-globe"></i>
+                      Pays (optionnel)</label> <input id="pays" placeholder="France"
+                      type="text"> <small>Nom du pays</small> </div>
+                  <div class="form-group full-width"> <label for="tags-input"><i
+                        class="fas fa-tags"></i> Tags/Catégories</label> <input
+                      id="tags-input" placeholder="Lien, Client (séparés par ;)"
+                      type="text"> <small>Séparez les tags avec des
+                      point-virgules. Cliquez sur "Enregistrer" pour créer les
+                      catégories.</small> </div>
+                </div>
+                <!-- Section: Dates et événements -->
+                <h4><i class="fas fa-calendar-alt"></i> Dates (optionnel)</h4>
+                <!-- Champ Anniversaire -->
+                <div class="form-group full-width"> <label for="anniversaire"><i
+                      class="fas fa-birthday-cake"></i> Anniversaire (optionnel)</label>
+                  <input id="anniversaire" placeholder="ex: 1985-06-15" type="date">
+                  <small>Format YYYY-MM-DD. Ex: 1985-06-15</small> </div>
+                <!-- Section: Notes -->
+                <h4><i class="fas fa-sticky-note"></i> Notes (optionnel)</h4>
+                <!-- Champ Notes -->
+                <div class="form-group full-width"> <label for="notes"><i class="fas fa-comment-alt"></i>
+                    Notes</label> <textarea id="notes" rows="5" placeholder="Informations supplémentaires sur ce contact..."></textarea>
+                  <small>Notes personnelles, coordonnées alternatives, etc.</small>
+                </div>
+                <!-- Boutons -->
+                <div class="form-actions"> <button type="submit" id="save-contact-btn"
+                    class="btn btn-primary"><i class="fas fa-save"></i>
+                    Enregistrer</button> <button type="button" id="delete-contact-btn"
+                    class="btn btn-danger delete-btn" style="display:none;"><i class="fas fa-trash"></i>
+                    Supprimer</button> </div>
+              </form>
+            </div>
+          </div>
+          <!-- Liste des contacts -->
+          <div class="contacts-grid" id="contacts-list">
+            <p class="empty-state">Chargement des contacts...</p>
+          </div>
+        </div>
+      </section>
+      <!-- Page: Catégories -->
+      <section id="categories" class="page-section">
+        <div class="card categories-card">
+          <div class="card-header">
+            <h2><i class="fas fa-tags"></i> Gestion des catégories</h2>
+            <button id="add-category-btn" class="btn btn-primary"><i class="fas fa-plus"></i>
+              Nouvelle catégorie</button> </div>
+          <!-- Modal pour ajouter/éditer une catégorie -->
+          <div id="category-modal" class="modal">
+            <div class="modal-content category-form-modal">
+              <div class="modal-header">
+                <h3 id="category-modal-title">Ajouter une catégorie</h3>
+                <button id="close-category-modal-btn" class="btn-close">×</button>
+              </div>
+              <form id="category-form"> <input id="category-id" type="hidden">
+                <div class="form-group full-width"> <label for="category-nom"><i
+                      class="fas fa-tag"></i> Nom de la catégorie</label> <input
+                    id="category-nom" required="" placeholder="ex: Amis, Famille, Clients"
+                    type="text"> </div>
+                <div class="form-group full-width"> <label for="category-couleur"><i
+                      class="fas fa-palette"></i> Couleur</label> <input id="category-couleur"
+                    value="#70ad47" type="color"> </div>
+                <div class="form-actions"> <button type="submit" id="save-category-btn"
+                    class="btn btn-primary"><i class="fas fa-save"></i>
+                    Enregistrer</button> <button type="button" id="delete-category-btn"
+                    class="btn btn-danger delete-category-btn" style="display:none;"><i
+                      class="fas fa-trash"></i> Supprimer</button> </div>
+              </form>
+            </div>
+          </div>
+          <!-- Liste des catégories -->
+          <div class="categories-grid" id="categories-list">
+            <p class="empty-state">Chargement des catégories...</p>
+          </div>
+        </div>
+      </section>
+      <!-- Page: Import/Export -->
+      <section id="import-export" class="page-section">
+        <div class="card import-export-card">
+          <div class="card-header">
+            <h2><i class="fas fa-exchange-alt"></i> Import / Export</h2>
+          </div>
+          <div class="tabs"> <button class="tab-btn active" data-tab="import"><i
+                class="fas fa-download"></i> Importer</button> <button class="tab-btn"
+              data-tab="export"><i class="fas fa-upload"></i> Exporter</button>
+          </div>
+          <!-- Onglet: Import -->
+          <div class="tab-content active" id="import-tab">
+            <div class="upload-section">
+              <div class="upload-area" id="csv-upload-area"> <i class="fas fa-file-csv upload-icon"></i>
+                <h3>Fichier CSV</h3>
+                <p>Format standard : Prénom, Nom, Email, Téléphone, Organisation</p>
+                <input id="csv-file-input" accept=".csv" onchange="handleCsvUpload(this.files[0]);"
+                  style="display:none;" type="file"> </div>
+              <div class="upload-section">
+                <div class="upload-area" id="vcf-upload-area"> <i class="fas fa-address-card upload-icon"></i>
+                  <h3>Fichier VCF (vCard)</h3>
+                  <p>Format standard pour les contacts vCard</p>
+                  <input id="vcf-file-input" accept=".vcf" onchange="handleVcfUpload(this.files[0]);"
+                    style="display:none;" type="file"> </div>
+              </div>
+              <button id="import-cancel-btn" class="btn btn-secondary" style="display:none;">Annuler
+                l'import</button> </div>
+            <div class="upload-status" id="upload-status">
+              <p>Situation actuelle : Aucun fichier en attente</p>
+            </div>
+          </div>
+          <!-- Onglet: Export -->
+          <div class="tab-content" id="export-tab">
+            <div class="export-options">
+              <h3><i class="fas fa-file-export"></i> Formats disponibles</h3>
+              <ul class="export-format-list">
+                <li> <label> <input id="export-csv-checkbox" checked="checked"
+                      type="checkbox"> <span>CSV (excellence)</span> </label>
+                </li>
+                <li> <label> <input id="export-vcf-checkbox" checked="checked"
+                      type="checkbox"> <span>VCF (vCard)</span> </label> </li>
+                <li> <label> <input id="export-xlsx-checkbox" checked="checked"
+                      type="checkbox"> <span>XLSX (Excel moderne)</span> </label>
+                </li>
+              </ul>
+              <!-- Grille d'aperçu des contacts pour export -->
+              <div class="preview-contacts">
+                <h4><i class="fas fa-eye"></i> Contacts à inclure dans l'export</h4>
+                <label class="checkbox-label"> <input id="export-all-contacts"
+                    checked="checked" type="checkbox"> Tous les contacts </label>
+              </div>
+              <button id="export-btn" class="btn btn-primary"><i class="fas fa-file-download"></i>
+                Télécharger l'export</button> </div>
+            <!-- Modal de prévisualisation -->
+            <div id="export-preview-modal" class="modal">
+              <div class="modal-content export-preview-modal">
+                <div class="modal-header">
+                  <h3>Aperçu de l'export</h3>
+                  <button id="close-export-preview-btn" class="btn-close">×</button>
+                </div>
+                <div class="preview-content">
+                  <div id="export-preview-list"></div>
+                  <p class="preview-count" id="preview-contact-count"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Documentation vCard (affichée une seule fois au premier lancement) -->
+      <div id="vcard-doc-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:900px;">
+          <div class="modal-header">
+            <h3><i class="fas fa-info-circle"></i> Champs vCard standards -
+              Documentation</h3>
+            <button id="close-vcard-doc-btn" class="btn-close">×</button> </div>
+          <div class="modal-body" style="font-size:14px;">
+            <p>Cette application supporte tous les champs vCard (vCard 3.0)
+              standards pour l'import/export de fichiers VCF.</p>
+            <h4><i class="fas fa-user"></i> Champs d'identité :</h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                  <th style="padding:8px;">Champ vCard</th>
+                  <th>Description</th>
+                  <th>Exemple</th>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>NOM;FN</strong></td>
+                  <td>Nom complet (valeur FN)</td>
+                  <td>Dupont</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>PRENOM</strong></td>
+                  <td>Prénom</td>
+                  <td>Jean</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>TITLE</strong></td>
+                  <td>Titre professionnel</td>
+                  <td>Dr.</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>PREFIX/PREFIX2</strong></td>
+                  <td>Préfixe d'honneur (HONORIFIC)</td>
+                  <td>Mme / M.</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>SUFFIX/SUFFIX2</strong></td>
+                  <td>Suffixe d'honneur</td>
+                  <td>Jr. / Sr.</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>NICKNAME</strong></td>
+                  <td>Surnom</td>
+                  <td>Jeanne</td>
+                </tr>
+              </tbody>
+            </table>
+            <h4><i class="fas fa-calendar"></i> Champs de dates :</h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                  <th style="padding:8px;">Champ vCard</th>
+                  <th>Description</th>
+                  <th>Format attendu</th>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>BDAY</strong></td>
+                  <td>Date d'anniversaire</td>
+                  <td>YYYY-MM-DD (ex: 1985-06-15)</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>BIRTHDAY-TIMEZONE</strong></td>
+                  <td>Fuseau horaire de l'anniversaire</td>
+                  <td>(ex: Europe/Paris)</td>
+                </tr>
+              </tbody>
+            </table>
+            <h4><i class="fas fa-building"></i> Champs d'organisation :</h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                  <th style="padding:8px;">Champ vCard</th>
+                  <th>Description</th>
+                  <th>Exemple</th>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>ORGANIZATIONNAME/ORG</strong></td>
+                  <td>Nom de l'organisation</td>
+                  <td>Ma Entreprise SAS</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>ROLE</strong></td>
+                  <td>Rôle dans l'organisation</td>
+                  <td>CEO</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>NOTE</strong></td>
+                  <td>Notes générales</td>
+                  <td>Téléphone portable : 06 12 34 56 78</td>
+                </tr>
+              </tbody>
+            </table>
+            <h4><i class="fas fa-map-marker-alt"></i> Champs d'adresse :</h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                  <th style="padding:8px;">Champ vCard</th>
+                  <th>Description</th>
+                  <th>Exemple</th>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>ADR</strong></td>
+                  <td>Adresse (format structuré)</td>
+                  <td>Rue de la Paix 42, 75001 Paris</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>STREET/ADR-STREET</strong></td>
+                  <td>Rue (composant adr)</td>
+                  <td>Rue de la Paix 42</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>LOCALITY/CITY</strong></td>
+                  <td>Ville</td>
+                  <td>Paris</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>REGION/SUBDIVISION</strong></td>
+                  <td>Région / département</td>
+                  <td>Île-de-France</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>POSTALCODE/ZIPCODE</strong></td>
+                  <td>Code postal</td>
+                  <td>75001</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>COUNTRY-REGION/COUNTRY</strong></td>
+                  <td>Pays</td>
+                  <td>France</td>
+                </tr>
+              </tbody>
+            </table>
+            <h4><i class="fas fa-users"></i> Champs familiaux :</h4>
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr style="border-bottom:1px solid #eee;">
+                  <th style="padding:8px;">Champ vCard</th>
+                  <th>Description</th>
+                  <th>Exemple</th>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>SPOUSE</strong></td>
+                  <td>Conjoint(e)</td>
+                  <td>Sophie Dupont</td>
+                </tr>
+                <tr style="border-bottom:1px solid #eee;">
+                  <td style="padding:8px;"><strong>FATHER/CHILD</strong></td>
+                  <td>Père / Enfants</td>
+                  <td>Marc Dupont; Thomas; Julie</td>
+                </tr>
+              </tbody>
+            </table>
+            <h4><i class="fas fa-tag"></i> Tags personnalisés :</h4>
+            <p>Vous pouvez ajouter des tags personnalisés via :</p>
+            <ul>
+              <li>Le champ <strong>X-CUSTOM-TAGS</strong> dans les fichiers VCF</li>
+              <li>En séparant les tags par des point-virgules dans le formulaire
+                (ex: "Client;VIP;Lien")</li>
+            </ul>
+            <p><i class="fas fa-info-circle"></i> <strong>Note :</strong> Les
+              formats de champs vCard peuvent varier selon l'application
+              créatrice du fichier VCF. Cette application normalise les données
+              à l'import.</p>
+            <div style="text-align:right;margin-top:20px;"> <button id="accept-vcard-doc-btn"
+                class="btn btn-secondary">Compris, fermer</button> </div>
+          </div>
+        </div>
+      </div>
+      <!-- Page: Paramètres -->
+      <section id="settings" class="page-section">
+        <div class="card settings-card">
+          <div class="card-header">
+            <h2><i class="fas fa-cog"></i> Paramètres</h2>
+          </div>
+          <!-- Configuration du site -->
+          <div class="config-section">
+            <h3><i class="fas fa-home"></i> Informations sur le site</h3>
+            <div class="config-item"> <label>Nom du site</label> <input id="config-site-name"
+                type="text"> </div>
+          </div>
+          <!-- Section avec bouton -->
+          <div class="card-section-with-btn">
+            <div class="section-header">
+              <h3><i class="fas fa-info-circle"></i> À propos</h3>
+              <button id="load-stats-btn" class="btn btn-primary"><i class="fas fa-sync-alt"></i>
+                Actualiser</button> </div>
+            <div class="stats-summary">
+              <div class="stat-row"> <span><i class="fas fa-users"></i>
+                  Contacts au total :</span> <strong id="settings-total-contacts">0</strong>
+              </div>
+              <div class="stat-row"> <span><i class="fas fa-tags"></i>
+                  Catégories disponibles :</span> <strong id="settings-total-categories">0</strong>
+              </div>
+            </div>
+            <!-- Dernier contact créé -->
+            <div class="last-info" id="settings-last-contact">
+              <p><small>Aucune donnée disponible. Actualisez les statistiques
+                  pour voir le dernier contact créé.</small></p>
+            </div>
+            <!-- Section vider la base de données -->
+            <div class="card-section-with-btn danger-section">
+              <div class="section-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
+                  Gestion des données</h3>
+              </div>
+              <div class="danger-notice">
+                <p style="margin-bottom: 12px;"><i class="fas fa-exclamation-circle"></i>
+                  Attention : cette action est irréversible !</p>
+              </div>
+              <div class="form-actions" style="display:flex; flex-direction:column; gap:10px;">
+                <button id="clear-database-btn" class="btn btn-danger danger-btn">
+                  <i class="fas fa-trash-alt"></i> Vider la base de données </button>
+                <p style="font-size: 12px; color: #666; margin-left: auto;"><small>Vérifier
+                    l'état</small></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Modal: Doubleton/Fusion -->
+      <div id="duplicate-modal" class="modal">
+        <div class="modal-content duplicate-modal">
+          <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Contacts similaires
+              trouvés</h3>
+            <button id="close-duplicate-modal-btn" class="btn-close">×</button>
+          </div>
+          <div class="modal-body duplicate-list" id="duplicate-contacts-list">
+            <!-- Liste des doubles --> </div>
+          <div class="modal-footer"> <button id="close-duplicates-btn" class="btn btn-secondary">Fermer</button>
+            <button id="merge-selected-btn" class="btn btn-warning" style="display:none;">Fusionner
+              sélectionnés</button> </div>
+        </div>
+      </div>
+      <!-- Footer -->
+      <footer class="footer">
+        <p><small>© 2026 Application de Gestion de Contacts</small></p>
+      </footer>
     </main>
-
     <!-- Scripts JavaScript -->
     <script src="js/app.js"></script>
-</body>
+  </body>
 </html>
