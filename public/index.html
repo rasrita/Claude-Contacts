@@ -42,7 +42,8 @@
             contacts</p>
         </div>
         <div class="search-container"> <i class="fas fa-search search-icon"></i>
-          <input id="global-search" placeholder="Rechercher un contact..." class="search-input"
+          <input id="global-search" placeholder="Rechercher un contact..." class="search-input"
+
             type="text"> </div>
       </header>
       <!-- Page: Tableau de bord -->
@@ -87,107 +88,117 @@
               <form id="contact-form">
                 <!-- En-tête du formulaire -->
                 <div class="form-header-info"> <input id="contact-id" type="hidden">
-                  <button type="button" id="cancel-edit-btn" class="btn btn-secondary cancel-btn"
+                  <button type="button" id="cancel-edit-btn" class="btn btn-secondary cancel-btn"
+
                     style="display:none;">Annuler</button> </div>
                 <!-- Section: Informations personnelles -->
                 <h4><i class="fas fa-user-circle"></i> Informations personnelles</h4>
                 <!-- Champ Nom -->
-                <div class="form-group full-width"> <label for="nom"><i class="fas fa-user"></i>
-                    Nom <span class="required">*</span></label> <input id="nom"
-                    required="" placeholder="ex: Dupont" type="text"> <small>Le
-                    nom de famille du contact</small> </div>
-                <!-- Champ Prénom -->
-                <div class="form-group full-width"> <label for="prenom"><i class="fas fa-user"></i>
-                    Prénom <span class="required">*</span></label> <input id="prenom"
-                    required="" placeholder="ex: Jean" type="text"> <small>Le
-                    prénom du contact</small> </div>
-                <!-- Champ Titre -->
-                <div class="form-group full-width"> <label for="titre"><i class="fas fa-user-tag"></i>
-                    Titre (optionnel)</label> <input id="titre" placeholder="Dr., Prof., Ing., Mme, M."
-                    type="text"> <small>Titre professionnel : Dr., Prof., Ing.,
-                    ou honorifique</small> </div>
-                <!-- Champ Surnom -->
-                <div class="form-group full-width"> <label for="surnom"><i class="fas fa-masks"></i>
-                    Surnom (optionnel)</label> <input id="surnom" placeholder="Jeanne, Toto"
-                    type="text"> <small>Surnom ou diminutif (sans espace)</small>
+                <div class="form-grid">
+                  <div class="form-group full-width"> <label for="nom" title="Le nom de famille du contact"><i class="fas fa-user"></i>
+                      Nom <span class="required">*</span></label> <input id="nom"
+
+                      required="" placeholder="ex: Dupont" type="text"> </div>
+                  <!-- Champ Prénom -->
+                  <div class="form-group full-width"> <label for="prenom" title="Le prénom du contact"><i class="fas fa-user"></i>
+                      Prénom <span class="required">*</span></label> <input id="prenom"
+
+                      required="" placeholder="ex: Jean" type="text"> </div>
                 </div>
+                <!-- Champ Titre -->
+                <div class="form-group full-width"> <label for="titre" title="Titre professionnel : Dr., Prof., Ing., ou honorifique"><i class="fas fa-user-tag"></i>
+                    Titre (optionnel)</label> <input id="titre" placeholder="Dr., Prof., Ing., Mme, M."
+
+                    type="text"> </div>
+                <!-- Champ Surnom -->
+                <div class="form-group full-width"> <label for="surnom" title="Surnom ou diminutif (sans espace)"><i class="fas fa-masks"></i>
+                    Surnom (optionnel)</label> <input id="surnom" placeholder="Jeanne, Toto"
+
+                    type="text"> </div>
                 <!-- Grille pour Email et Téléphone -->
                 <div class="form-grid">
                   <div class="form-group"> <label for="email"><i class="fas fa-envelope"></i>
-                      Email</label> <input id="email" placeholder="jean.dupont@email.com"
+                      Email</label> <input id="email" placeholder="jean.dupont@email.com"
+
                       type="email"> </div>
                   <div class="form-group"> <label for="telephone"><i class="fas fa-phone"></i>
-                      Téléphone</label> <input id="telephone" placeholder="+33 1 23 45 67 89"
+                      Téléphone</label> <input id="telephone" placeholder="+33 1 23 45 67 89"
+
                       type="tel"> </div>
                 </div>
                 <!-- Section: Informations organisationnelles -->
                 <h4><i class="fas fa-briefcase"></i> Organisation</h4>
                 <!-- Champ Organisation -->
-                <div class="form-group full-width"> <label for="organisation"><i
-                      class="fas fa-building"></i> Organisation</label> <input
-                    id="organisation" placeholder="Ma Entreprise SAS" type="text">
-                  <small>Nom de l'organisation ou entreprise</small> </div>
+                <div class="form-group full-width"> <label for="organisation" title="Nom de l'organisation ou entreprise"><i
+
+                      class="fas fa-building"></i> Organisation</label> <input
+
+                    id="organisation" placeholder="Ma Entreprise SAS" type="text"> </div>
                 <!-- Grille pour Rôle et Conjoint -->
                 <div class="form-grid">
-                  <div class="form-group full-width"> <label for="conjoint"><i
+                  <div class="form-group full-width"> <label for="conjoint" title="Nom complet du conjoint"><i
+
                         class="fas fa-users"></i> Conjoint(e) (optionnel)</label>
-                    <input id="conjoint" placeholder="Sophie Dupont" type="text">
-                    <small>Nom complet du conjoint</small> </div>
+                    <input id="conjoint" placeholder="Sophie Dupont" type="text"> </div>
                 </div>
                 <!-- Section: Adresse -->
                 <h4><i class="fas fa-map-marker-alt"></i> Adresse (optionnel)</h4>
                 <!-- Grille pour adresse et code postal -->
                 <div class="form-grid">
-                  <div class="form-group full-width"> <label for="adresse"><i class="fas fa-location-dot"></i>
-                      Adresse</label> <input id="adresse" placeholder="12 rue de la Paix, Appartement 4"
-                      type="text"> <small>Rue ou adresse complète</small> </div>
-                  <div class="form-group full-width"> <label for="code_postal"><i
+                  <div class="form-group full-width"> <label for="adresse" title="Rue ou adresse complète"><i class="fas fa-location-dot"></i>
+                      Adresse</label> <input id="adresse" placeholder="12 rue de la Paix, Appartement 4"
+
+                      type="text"> </div>
+                  <div class="form-group full-width"> <label for="code_postal" title="Code postal en chiffres"><i
+
                         class="fas fa-hashtag"></i> Code postal (optionnel)</label>
-                    <input id="code_postal" placeholder="75001" type="text"> <small>Code
-                      postal en chiffres</small> </div>
+                    <input id="code_postal" placeholder="75001" type="text"> </div>
                 </div>
                 <!-- Grille pour ville, région, pays -->
                 <div class="form-grid">
-                  <div class="form-group full-width"> <label for="ville"><i class="fas fa-city"></i>
-                      Ville (optionnel)</label> <input id="ville" placeholder="Paris"
-                      type="text"> <small>Nom de la ville</small> </div>
-                  <div class="form-group full-width"> <label for="region"><i class="fas fa-layer-group"></i>
-                      Région / Département (optionnel)</label> <input id="region"
-                      placeholder="Île-de-France" type="text"> <small>Région ou
-                      département</small> </div>
+                  <div class="form-group full-width"> <label for="ville" title="Nom de la ville"><i class="fas fa-city"></i>
+                      Ville (optionnel)</label> <input id="ville" placeholder="Paris"
+
+                      type="text"> </div>
+                  <div class="form-group full-width"> <label for="region" title="Région ou département"><i class="fas fa-layer-group"></i>
+                      Région / Département (optionnel)</label> <input id="region"
+
+                      placeholder="Île-de-France" type="text"> </div>
                 </div>
                 <!-- Grille pour pays et tags -->
                 <div class="form-grid">
-                  <div class="form-group full-width"> <label for="pays"><i class="fas fa-globe"></i>
-                      Pays (optionnel)</label> <input id="pays" placeholder="France"
-                      type="text"> <small>Nom du pays</small> </div>
-                  <div class="form-group full-width"> <label for="tags-input"><i
-                        class="fas fa-tags"></i> Tags/Catégories</label> <input
-                      id="tags-input" placeholder="Lien, Client (séparés par ;)"
-                      type="text"> <small>Séparez les tags avec des
-                      point-virgules. Cliquez sur "Enregistrer" pour créer les
-                      catégories.</small> </div>
+                  <div class="form-group full-width"> <label for="pays" title="Nom du pays"><i class="fas fa-globe"></i>
+                      Pays (optionnel)</label> <input id="pays" placeholder="France"
+
+                      type="text"> </div>
+                  <div class="form-group full-width"> <label for="tags-input" title="Séparez les tags avec des point-virgules. Cliquez sur 'Enregistrer' pour créer les catégories."><i
+
+                        class="fas fa-tags"></i> Tags/Catégories</label> <input
+
+                      id="tags-input" placeholder="Lien, Client (séparés par ;)"
+
+                      type="text"> </div>
                 </div>
                 <!-- Section: Dates et événements -->
                 <h4><i class="fas fa-calendar-alt"></i> Dates (optionnel)</h4>
                 <!-- Champ Anniversaire -->
-                <div class="form-group full-width"> <label for="anniversaire"><i
+                <div class="form-group full-width"> <label for="anniversaire" title="Format YYYY-MM-DD. Ex: 1985-06-15"><i
+
                       class="fas fa-birthday-cake"></i> Anniversaire (optionnel)</label>
-                  <input id="anniversaire" placeholder="ex: 1985-06-15" type="date">
-                  <small>Format YYYY-MM-DD. Ex: 1985-06-15</small> </div>
+                  <input id="anniversaire" placeholder="ex: 1985-06-15" type="date"> </div>
                 <!-- Section: Notes -->
                 <h4><i class="fas fa-sticky-note"></i> Notes (optionnel)</h4>
                 <!-- Champ Notes -->
-                <div class="form-group full-width"> <label for="notes"><i class="fas fa-comment-alt"></i>
-                    Notes</label> <textarea id="notes" rows="5" placeholder="Informations supplémentaires sur ce contact..."></textarea>
-                  <small>Notes personnelles, coordonnées alternatives, etc.</small>
-                </div>
+                <div class="form-group full-width"> <label for="notes" title="Notes personnelles, coordonnées alternatives, etc."><i class="fas fa-comment-alt"></i>
+                    Notes</label> <textarea id="notes" rows="5" placeholder="Informations supplémentaires sur ce contact..."></textarea> </div>
                 <!-- Boutons -->
-                <div class="form-actions"> <button type="submit" id="save-contact-btn"
-                    class="btn btn-primary"><i class="fas fa-save"></i>
-                    Enregistrer</button> <button type="button" id="delete-contact-btn"
-                    class="btn btn-danger delete-btn" style="display:none;"><i class="fas fa-trash"></i>
-                    Supprimer</button> </div>
+                <div class="form-actions"> 
+                  <button type="submit" id="save-contact-btn" class="btn btn-primary">
+                    <i class="fas fa-save"></i>Enregistrer
+                  </button> 
+                  <button type="button" id="delete-contact-btn" class="btn btn-danger delete-btn" style="display:none;">
+                    <i class="fas fa-trash"></i>Supprimer</button> 
+                </div>
               </form>
             </div>
           </div>
@@ -212,17 +223,25 @@
                 <button id="close-category-modal-btn" class="btn-close">×</button>
               </div>
               <form id="category-form"> <input id="category-id" type="hidden">
-                <div class="form-group full-width"> <label for="category-nom"><i
-                      class="fas fa-tag"></i> Nom de la catégorie</label> <input
-                    id="category-nom" required="" placeholder="ex: Amis, Famille, Clients"
+                <div class="form-group full-width"> <label for="category-nom"><i
+
+                      class="fas fa-tag"></i> Nom de la catégorie</label> <input
+
+                    id="category-nom" required="" placeholder="ex: Amis, Famille, Clients"
+
                     type="text"> </div>
-                <div class="form-group full-width"> <label for="category-couleur"><i
-                      class="fas fa-palette"></i> Couleur</label> <input id="category-couleur"
+                <div class="form-group full-width"> <label for="category-couleur"><i
+
+                      class="fas fa-palette"></i> Couleur</label> <input id="category-couleur"
+
                     value="#70ad47" type="color"> </div>
-                <div class="form-actions"> <button type="submit" id="save-category-btn"
+                <div class="form-actions"> <button type="submit" id="save-category-btn"
+
                     class="btn btn-primary"><i class="fas fa-save"></i>
-                    Enregistrer</button> <button type="button" id="delete-category-btn"
-                    class="btn btn-danger delete-category-btn" style="display:none;"><i
+                    Enregistrer</button> <button type="button" id="delete-category-btn"
+
+                    class="btn btn-danger delete-category-btn" style="display:none;"><i
+
                       class="fas fa-trash"></i> Supprimer</button> </div>
               </form>
             </div>
@@ -239,8 +258,10 @@
           <div class="card-header">
             <h2><i class="fas fa-exchange-alt"></i> Import / Export</h2>
           </div>
-          <div class="tabs"> <button class="tab-btn active" data-tab="import"><i
-                class="fas fa-download"></i> Importer</button> <button class="tab-btn"
+          <div class="tabs"> <button class="tab-btn active" data-tab="import"><i
+
+                class="fas fa-download"></i> Importer</button> <button class="tab-btn"
+
               data-tab="export"><i class="fas fa-upload"></i> Exporter</button>
           </div>
           <!-- Onglet: Import -->
@@ -249,13 +270,15 @@
               <div class="upload-area" id="csv-upload-area"> <i class="fas fa-file-csv upload-icon"></i>
                 <h3>Fichier CSV</h3>
                 <p>Format standard : Prénom, Nom, Email, Téléphone, Organisation</p>
-                <input id="csv-file-input" accept=".csv" onchange="handleCsvUpload(this.files[0]);"
+                <input id="csv-file-input" accept=".csv" onchange="handleCsvUpload(this.files[0]);"
+
                   style="display:none;" type="file"> </div>
               <div class="upload-section">
                 <div class="upload-area" id="vcf-upload-area"> <i class="fas fa-address-card upload-icon"></i>
                   <h3>Fichier VCF (vCard)</h3>
                   <p>Format standard pour les contacts vCard</p>
-                  <input id="vcf-file-input" accept=".vcf" onchange="handleVcfUpload(this.files[0]);"
+                  <input id="vcf-file-input" accept=".vcf" onchange="handleVcfUpload(this.files[0]);"
+
                     style="display:none;" type="file"> </div>
               </div>
               <button id="import-cancel-btn" class="btn btn-secondary" style="display:none;">Annuler
@@ -269,19 +292,23 @@
             <div class="export-options">
               <h3><i class="fas fa-file-export"></i> Formats disponibles</h3>
               <ul class="export-format-list">
-                <li> <label> <input id="export-csv-checkbox" checked="checked"
+                <li> <label> <input id="export-csv-checkbox" checked="checked"
+
                       type="checkbox"> <span>CSV (excellence)</span> </label>
                 </li>
-                <li> <label> <input id="export-vcf-checkbox" checked="checked"
+                <li> <label> <input id="export-vcf-checkbox" checked="checked"
+
                       type="checkbox"> <span>VCF (vCard)</span> </label> </li>
-                <li> <label> <input id="export-xlsx-checkbox" checked="checked"
+                <li> <label> <input id="export-xlsx-checkbox" checked="checked"
+
                       type="checkbox"> <span>XLSX (Excel moderne)</span> </label>
                 </li>
               </ul>
               <!-- Grille d'aperçu des contacts pour export -->
               <div class="preview-contacts">
                 <h4><i class="fas fa-eye"></i> Contacts à inclure dans l'export</h4>
-                <label class="checkbox-label"> <input id="export-all-contacts"
+                <label class="checkbox-label"> <input id="export-all-contacts"
+
                     checked="checked" type="checkbox"> Tous les contacts </label>
               </div>
               <button id="export-btn" class="btn btn-primary"><i class="fas fa-file-download"></i>
@@ -468,7 +495,8 @@
               formats de champs vCard peuvent varier selon l'application
               créatrice du fichier VCF. Cette application normalise les données
               à l'import.</p>
-            <div style="text-align:right;margin-top:20px;"> <button id="accept-vcard-doc-btn"
+            <div style="text-align:right;margin-top:20px;"> <button id="accept-vcard-doc-btn"
+
                 class="btn btn-secondary">Compris, fermer</button> </div>
           </div>
         </div>
@@ -482,7 +510,8 @@
           <!-- Configuration du site -->
           <div class="config-section">
             <h3><i class="fas fa-home"></i> Informations sur le site</h3>
-            <div class="config-item"> <label>Nom du site</label> <input id="config-site-name"
+            <div class="config-item"> <label>Nom du site</label> <input id="config-site-name"
+
                 type="text"> </div>
           </div>
           <!-- Section avec bouton -->
