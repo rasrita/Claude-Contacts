@@ -713,12 +713,22 @@ function openContactModal(contact = null) {
         notes: document.getElementById('notes')
     };
 
+    // Sauvegarder l'ID du contact en cours d'édition pour le localStorage
     if (contact) {
-        // Mode édition
+        window.editContactId = contact.id;
+    } else {
+        window.editContactId = null;
+    }
+
+    // Restaurer les données depuis localStorage si disponibles
+    restoreContactFromLocalStorage(window.editContactId);
+
+    if (contact) {
+        // Mode édition - boutons Enregistrer, Annuler, Supprimer doivent être affichés
         title.textContent = 'Modifier le contact';
         cancelBtn.style.display = 'inline-block';
         deleteBtn.style.display = 'inline-block';
-        saveBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
 
         contactForm.id.value = contact.id;
         contactForm.nom.value = contact.nom || '';
@@ -733,11 +743,11 @@ function openContactModal(contact = null) {
 
         contactForm.notes.value = contact.notes || '';
     } else {
-        // Mode création
+        // Mode création - masquer le bouton Enregistrer car on utilise submit du formulaire et masquer Annuler
         title.textContent = 'Ajouter un contact';
         cancelBtn.style.display = 'none';
         deleteBtn.style.display = 'none';
-        saveBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
 
         contactForm.id.value = '';
         contactForm.nom.value = '';
@@ -784,15 +794,8 @@ function closeContactModal() {
  * Fermer le modal d'édition et annuler les modifications
  */
 function closeEditModal() {
+    cleanupLocalStorageKeys(); // Nettoyer toutes les clés d'édition
     closeContactModal();
-    const contactId = document.getElementById('contact-id').value;
-    if (contactId) {
-        // Supprimer les champs non requis du localStorage si existants
-        const dataKey = 'edit_contact_' + contactId;
-        try {
-            localStorage.removeItem(dataKey);
-        } catch (e) {}
-    }
 }
 
 // ==============================
@@ -1801,12 +1804,39 @@ function normalizeName(name) {
 }
 
 /**
+ * Convertir FormData en objet JSON lisible
+ */
+function formDataToObject(formData) {
+    const data = {};
+    formData.forEach((value, key) => {
+        // Pour les tags, on utilise une version normalisée pour le localStorage
+        if (key === 'tags') {
+            data.tagsInput = value;
+        } else {
+            data[key] = value;
+        }
+    });
+    return data;
+}
+
+/**
  * Sauvegarder un contact dans le localStorage pour l'édition ultérieure
  */
 function saveContactToLocalStorage(contactId) {
     try {
-        const data = document.getElementById('contact-form').FormData;
-        localStorage.setItem(`edit_contact_${contactId}`, JSON.stringify(data));
+        const form = document.getElementById('contact-form');
+        if (form && form.checkValidity()) {
+            const formData = new FormData(form);
+            const data = formDataToObject(formData);
+
+            // Sauvegarder pour l'édition
+            localStorage.setItem(`edit_contact_${contactId}`, JSON.stringify(data));
+
+            // Mettre à jour la clé pour le rappel lors du retour au dashboard
+            if (window.editContactId) {
+                localStorage.setItem('contact_id_for_edit', contactId.toString());
+            }
+        }
     } catch (e) {
         console.error('Erreur sauvegarde localStorage:', e);
     }
@@ -1820,13 +1850,40 @@ function restoreContactFromLocalStorage(contactId) {
         const data = localStorage.getItem(`edit_contact_${contactId}`);
         if (data) {
             const parsed = JSON.parse(data);
-            document.getElementById('nom').value = parsed.nom || '';
-            document.getElementById('prenom').value = parsed.prenom || '';
-            document.getElementById('email').value = parsed.email || '';
-            document.getElementById('telephone').value = parsed.telephone || '';
-            document.getElementById('organisation').value = parsed.organisation || '';
-            document.getElementById('tags-input').value = parsed.tagsInput || '';
-            document.getElementById('notes').value = parsed.notes || '';
+            const nomEl = document.getElementById('nom');
+            const prenomEl = document.getElementById('prenom');
+            const emailEl = document.getElementById('email');
+            const telephoneEl = document.getElementById('telephone');
+            const organisationEl = document.getElementById('organisation');
+            const tagsInputEl = document.getElementById('tags-input');
+            const notesEl = document.getElementById('notes');
+            const titreEl = document.getElementById('titre');
+            const surnomEl = document.getElementById('surnom');
+            const conjointEl = document.getElementById('conjoint');
+            const adresseEl = document.getElementById('adresse');
+            const codePostalEl = document.getElementById('code_postal');
+            const villeEl = document.getElementById('ville');
+            const regionEl = document.getElementById('region');
+            const paysEl = document.getElementById('pays');
+            const anniversaireEl = document.getElementById('anniversaire');
+
+            // Restaurer les valeurs (optionnels)
+            if (nomEl) nomEl.value = parsed.nom || '';
+            if (prenomEl) prenomEl.value = parsed.prenom || '';
+            if (emailEl) emailEl.value = parsed.email || '';
+            if (telephoneEl) telephoneEl.value = parsed.telephone || '';
+            if (organisationEl) organisationEl.value = parsed.organisation || '';
+            if (tagsInputEl) tagsInputEl.value = parsed.tagsInput || '';
+            if (notesEl) notesEl.value = parsed.notes || '';
+            if (titreEl) titreEl.value = parsed.titre || '';
+            if (surnomEl) surnomEl.value = parsed.surnom || '';
+            if (conjointEl) conjointEl.value = parsed.conjoint || '';
+            if (adresseEl) adresseEl.value = parsed.adresse || '';
+            if (codePostalEl) codePostalEl.value = parsed.code_postal || '';
+            if (villeEl) villeEl.value = parsed.ville || '';
+            if (regionEl) regionEl.value = parsed.region || '';
+            if (paysEl) paysEl.value = parsed.pays || '';
+            if (anniversaireEl) anniversaireEl.value = parsed.anniversaire || '';
         }
     } catch (e) {
         console.error('Erreur restauration localStorage:', e);
@@ -1967,12 +2024,13 @@ function setupEventListeners() {
             }
 
             if (contactId) {
-                // Mise à jour
+                // Mise à jour - nettoyer les données d'édition localStorage
                 const updated = await updateContact(contactId, contactData);
+                cleanupLocalStorageKeys();
             } else {
-                // Création
+                // Création - sauvegarder pour édition ultérieure si le modal reste ouvert
                 const created = await createContact(contactData);
-                saveContactToLocalStorage('new_' + Date.now());
+                saveContactToLocalStorage(created.id);
             }
         });
     }
@@ -2080,10 +2138,22 @@ function setupEventListeners() {
         });
     }
 
-    // Supprimer le localStorage sur fermeture des modals
+    // Supprimer le localStorage sur fermeture des modals (mode édition)
     const closeButtons = document.querySelectorAll('.btn-close, .cancel-btn');
     closeButtons.forEach(btn => {
-        btn.addEventListener('click', cleanupLocalStorageKeys);
+        btn.addEventListener('click', async () => {
+            await cleanupLocalStorageKeys();
+            if (btn.classList.contains('cancel-btn')) {
+                // Bouton Annuler - ferme aussi le modal
+                closeEditModal.call(this);
+            } else {
+                // Bouton X à côté du titre - on ne ferme que pour l'édition
+                const contactId = document.getElementById('contact-id')?.value;
+                if (contactId) {
+                    closeEditModal.call(this);
+                }
+            }
+        });
     });
     // Bouton fermer le modal de contact (si existant)                                                                                                          
     const closeModalBtn = document.getElementById('close-modal-btn');                                                                                           
