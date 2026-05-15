@@ -1155,7 +1155,9 @@ async function loadImportExport() {
         document.getElementById('export-tab')?.classList.add('active');
 
         const exportTabBtn = document.querySelector('.tab-btn[data-tab="export"]');
-        if (exportTabBtn) exportTabBtn.classList.add('active');
+        //if (exportTabBtn) exportTabBtn.classList.add('active');
+        const importTabBtn = document.querySelector('.tab-btn[data-tab="import"]');
+        if (importTabBtn) importTabBtn.classList.add('active');
 
         // Ajouter les écouteurs pour la navigation entre onglets
         const tabBtns = document.querySelectorAll('.tab-btn');
@@ -1170,6 +1172,7 @@ async function loadImportExport() {
                 btn.classList.add('active');
             });
         });
+        importTabBtn.click(); // Afficher l'onglet Importer par défaut
     } catch (error) {
         console.error('Erreur loadImportExport:', error);
     }
@@ -1372,6 +1375,7 @@ async function parseAndImportCSV(csvContent) {
 /**
  * Parser et importer VCF
  */
+/*
 async function parseAndImportVCF2(vcfContent) {
     const lines = vcfContent.split('\n').filter(l => l.trim());
 
@@ -1436,7 +1440,8 @@ async function parseAndImportVCF2(vcfContent) {
 
     showUploadStatus('success', `${count} contacts créés`);
 }
-
+    */
+/*
 async function parseAndImportVCF(vcfContent) {
     // Regex pour extraire les données vCard
     const fnRegex = /(?:FN[^:]*:)?([^,\n]+)/i;
@@ -1521,7 +1526,7 @@ async function parseAndImportVCF(vcfContent) {
         const tags = line.match(/^CATEGORIES:[^,\n]+/i)?.[0]?.split(';').map(c => c.trim())?.join(';') || '';
             console.log(line)
             console.debug(currentContact)
-/*
+
         // Logique d'extraction par type de champ
         if (key.match(/FN:())) {
             console.info('key ' + key);
@@ -1562,11 +1567,12 @@ async function parseAndImportVCF(vcfContent) {
             console.info('key ' + key);
             currentContact.note = clean(value);
         }   
- */     
+        }     
     }
 
     //return contacts;
 }
+    */
 // ==============================
 // EXPORT
 // ==============================
