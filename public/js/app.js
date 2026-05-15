@@ -2,7 +2,7 @@
  * Application de Gestion de Contacts - Script Principal
  * Gère toutes les interactions frontend avec l'API backend
  */
-
+ 
 // ==============================
 // FONCTIONS DE PARSE (import CSV/VCF)
 // ==============================
