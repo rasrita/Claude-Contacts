@@ -1,7 +1,7 @@
 # Mes Contacts - Application de Gestion de Contacts
 
 Application web complète de gestion de contacts développée avec **Node.js**, **Express** et **SQLite**. Elle offre une interface utilisateur moderne, responsive et intuitive pour gérer tous vos contacts professionnels et personnels.
-
+RasRita@Kalaboy Soft (@) 2026
 ---
 
 ## 🎯 Fonctionnalités Principales
