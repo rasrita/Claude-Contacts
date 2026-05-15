@@ -23,6 +23,7 @@ db.exec(`
         prenom_honneur_prefix VARCHAR(10),
         prenom_honneur_suffix VARCHAR(10),
         surnom VARCHAR(50),
+        email VARCHAR(255) ,
         telephone VARCHAR(30),
         organisation VARCHAR(150),
         adresse VARCHAR(255),
